@@ -1,8 +1,8 @@
-package playoutCore.commands;
+package playoutCore.pccp;
 
 import java.util.ArrayList;
-import meltedBackend.commands.MeltedCmdFactory;
 import playoutCore.dataStore.DataStore;
+import playoutCore.mvcp.MvcpCmdFactory;
 
 /**
  *
@@ -24,5 +24,5 @@ public abstract class PccpCommand {
         this.args = args;
     }
 
-    public abstract boolean execute(MeltedCmdFactory meltedCmdFactory, DataStore store);
+    public abstract boolean execute(MvcpCmdFactory meltedCmdFactory, DataStore store);
 }

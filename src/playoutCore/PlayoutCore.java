@@ -3,13 +3,13 @@ package playoutCore;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import meltedBackend.commands.MeltedCmdFactory;
-import meltedBackend.common.MeltedCommandException;
-import meltedBackend.responseParser.responses.ListResponse;
 import meltedBackend.telnetClient.MeltedTelnetClient;
-import playoutCore.commands.PccpCommand;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.impl.StdSchedulerFactory;
 import playoutCore.dataStore.DataStore;
 import playoutCore.dataStore.RedisStore;
+import playoutCore.pccp.PccpCommand;
 import playoutCore.producerConsumer.CommandsExecutor;
 import playoutCore.producerConsumer.CommandsListener;
 import redis.clients.jedis.Jedis;
@@ -24,13 +24,15 @@ public class PlayoutCore {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        new PlayoutCore();
+        PlayoutCore pc = new PlayoutCore();
+        pc.run();
     }
 
-    public PlayoutCore(){
+    private void run(){
         // General config
         Logger logger = Logger.getLogger(PlayoutCore.class.getName());
-        ConfigurationManager cfg = new ConfigurationManager(logger);
+        ConfigurationManager cfg = ConfigurationManager.getInstance();
+        cfg.init(logger);
 
         // Commands Queue
         ArrayBlockingQueue<PccpCommand> commandsQueue = new ArrayBlockingQueue(100, true);
@@ -39,9 +41,11 @@ public class PlayoutCore {
          * Connect to Redis PubSub server.
          */
         logger.log(Level.INFO, "Playout Core - Attempt to connect to Redis Pub/Sub server...");
-        Jedis redisPubSubServer = new Jedis(cfg.getRedisHost(), cfg.getRedisPort(), cfg.getRedisReconnectionTimeout());
+        Jedis redisPCCPSubscriber = new Jedis(cfg.getRedisHost(), cfg.getRedisPort(), cfg.getRedisReconnectionTimeout());
+        Jedis redisPublisher = new Jedis(cfg.getRedisHost(), cfg.getRedisPort(), cfg.getRedisReconnectionTimeout());
         try{
-            redisPubSubServer.connect();
+            redisPCCPSubscriber.connect();
+            redisPublisher.connect();
         }
         catch(JedisConnectionException e){
             //TODO handle reconnections
@@ -55,7 +59,7 @@ public class PlayoutCore {
          */
         logger.log(Level.INFO, "Playout Core - Attempt to connect to Redis store server...");
         Jedis redisStoreServer = new Jedis(cfg.getRedisHost(), cfg.getRedisPort(), cfg.getRedisReconnectionTimeout());
-        DataStore store = new RedisStore(redisStoreServer);
+        DataStore store = new RedisStore(redisStoreServer, logger);
         
 
         /**
@@ -78,7 +82,16 @@ public class PlayoutCore {
          * Start's the command executor thread.
          */
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsExecutor thread...");
-        CommandsExecutor executor = new CommandsExecutor(melted, store, commandsQueue, logger);
+        Scheduler scheduler = null;
+        try {
+            scheduler = new StdSchedulerFactory().getScheduler();
+            scheduler.start();
+        } catch (SchedulerException ex) {
+            Logger.getLogger(PlayoutCore.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        CommandsExecutor executor = new CommandsExecutor(melted, store,
+                redisPublisher, cfg.getRedisFscpChannel(), scheduler, commandsQueue, logger);
+        
         Thread executorThread = new Thread(executor);
         executorThread.start(); // TODO: handle reconnection
 
@@ -87,7 +100,9 @@ public class PlayoutCore {
          * Start's the command listener thread.
          */
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsListener thread...");
-        CommandsListener listener = new CommandsListener(redisPubSubServer, cfg.getRedisPccpChannel(), commandsQueue, logger);
+        CommandsListener listener = new CommandsListener(redisPCCPSubscriber, redisPublisher,
+                cfg.getRedisPccpChannel(), cfg.getRedisFscpChannel(), scheduler, commandsQueue, logger);
+
         Thread listenerThread = new Thread(listener);
         try{
             listenerThread.start();
@@ -98,21 +113,6 @@ public class PlayoutCore {
             System.exit(1);
         }
 
-
-        /**
-         * General configurations.
-         */
-        //TODO esto está provisorio        
-        MeltedCmdFactory f = new MeltedCmdFactory(melted);
-        try {
-            ListResponse r = ((ListResponse)f.getNewListCmd("U0").exec());
-            int l = r.getPlaylistLength();
-            redisStoreServer.set("U0", String.valueOf(l));
-        } catch (MeltedCommandException ex) {
-            Logger.getLogger(PlayoutCore.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-
-        logger.log(Level.INFO, "Playout Core - Ready...");
+        logger.log(Level.INFO, "Playout Core - Ready...\n\n");
     }
 }

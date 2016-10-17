@@ -1,9 +1,9 @@
-package playoutCore.commands.pccp;
+package playoutCore.pccp.commands;
 
 import java.util.ArrayList;
-import meltedBackend.commands.MeltedCmdFactory;
-import playoutCore.commands.PccpCommand;
+import playoutCore.pccp.PccpCommand;
 import playoutCore.dataStore.DataStore;
+import playoutCore.mvcp.MvcpCmdFactory;
 
 /**
  *
@@ -16,7 +16,7 @@ public class PccpPSCHED extends PccpCommand {
     }
 
     @Override
-    public boolean execute(MeltedCmdFactory melted, DataStore store) {
+    public boolean execute(MvcpCmdFactory melted, DataStore store) {
         //TODO: implement PSCHED cmd
         // Pedirle a redis la playlist <id>
         // Obtener el path de todos los videos que forman parte de la playlist

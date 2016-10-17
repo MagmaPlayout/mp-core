@@ -2,8 +2,13 @@ package playoutCore.dataStore;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import playoutCore.dataStore.dataStructures.Clip;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -12,45 +17,61 @@ import redis.clients.jedis.Jedis;
  * @author rombus
  */
 public class RedisStore implements DataStore {
-    private final Jedis server;
+    private static final String CLIPS_KEY = "clips";    // Json KEY that stores the list of clips
+    private static final String PATH_KEY = "path";      // Json KEY that stores the path of the current clip
+    private static final String FILTER_JSON_KEY = "idFilter";// Json KEY that stores the id of the filter of the current clip
+    private static final String FILTER_LIST_KEY = "filterList"; // Json KEY that stores all the filters available
+    private static final String FILTER_HTML_KEY = "htmlCode";   // Json KEY that stores the actual filter data
+    private static final String DURATION_KEY = "duration";      // Json KEY that stores the duration of the clip
 
-    public RedisStore(Jedis server){
+    private final Jedis server;
+    private final Logger logger;
+
+    public RedisStore(Jedis server, Logger logger){
         this.server = server;
+        this.logger = logger;
     }
 
     @Override
-    public ArrayList<String> getPlaylistClips(String id) {
-        String jsonString = server.get(id);
-        JsonElement data = new JsonParser().parse(jsonString);
-        JsonArray clips = data.getAsJsonObject().getAsJsonArray("clips");
+    public ArrayList<Clip> getPlaylistClips(String playlistId) {
+        ArrayList<Clip> pathList = null;
+        String jsonString = server.get(playlistId);
 
-        ArrayList<String> pathList = new ArrayList<>();
-        for(JsonElement clip: clips){
-            String path = clip.getAsJsonObject().getAsJsonPrimitive("path").toString();
-            pathList.add(path);
+        try{
+            JsonElement data = new JsonParser().parse(jsonString);
+            JsonArray clips = data.getAsJsonObject().getAsJsonArray(CLIPS_KEY);
+
+            pathList = new ArrayList<>();
+            for(JsonElement clip: clips){
+                JsonObject curObj = clip.getAsJsonObject();
+
+                String path = curObj.getAsJsonPrimitive(PATH_KEY).toString();
+                String filterId = curObj.getAsJsonPrimitive(FILTER_JSON_KEY).toString().replace("\"", "");
+                Duration duration = Duration.parse(curObj.getAsJsonPrimitive(DURATION_KEY).toString().replace("\"", ""));
+                
+                pathList.add(new Clip(path, duration, (filterId.isEmpty())? Clip.NO_FILTER : Integer.parseInt(filterId)));
+            }
+        }
+        catch(NullPointerException e){
+            logger.log(Level.SEVERE, "RedisStore - Couldn't parse response.");
         }
         
         return pathList;
     }
 
     @Override
-    public int getPlaylistLength() {
-        //TODO hardcoded unit;
-        String UNIT = "U0";
-        return Integer.parseInt(server.get(UNIT));
-    }
+    public String getFilter(int filterId) {
+        String jsonString = server.lindex(FILTER_LIST_KEY, filterId);
+        String filterString = null;
 
-    @Override
-    public void incrementPlaylistLength() {
-        //TODO hardcoded unit;
-        String UNIT = "U0";
-        server.incr(UNIT);
-    }
+        try{
+            JsonObject data = (JsonObject) new JsonParser().parse(jsonString);
+            filterString = data.get(FILTER_HTML_KEY).toString();
+        }
+        catch(NullPointerException e){
+            logger.log(Level.SEVERE, "RedisStore - Couldn't parse response.");
+        }
 
-    @Override
-    public void resetPlaylist(){
-        //TODO hardcoded unit;
-        String UNIT = "U0";
-        server.set(UNIT, "0");
+        return filterString;
     }
 }

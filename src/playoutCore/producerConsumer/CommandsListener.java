@@ -3,8 +3,9 @@ package playoutCore.producerConsumer;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import playoutCore.commands.PccpCommand;
-import playoutCore.commands.PccpFactory;
+import org.quartz.Scheduler;
+import playoutCore.pccp.PccpCommand;
+import playoutCore.pccp.PccpFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
@@ -21,17 +22,10 @@ public class CommandsListener implements Runnable{
     private final PccpFactory pccp;
     private final ArrayBlockingQueue<PccpCommand> cmdQueue;
 
-    public CommandsListener(String host, int port, String pccpChannel, ArrayBlockingQueue cmdQueue, Logger logger){
-        jedis = new Jedis(host, port);
-        pccp = new PccpFactory();
-        this.logger = logger;
-        this.pccpChannel = pccpChannel;
-        this.cmdQueue = cmdQueue;
-    }
-
-    public CommandsListener(Jedis redisPubSubServer, String pccpChannel, ArrayBlockingQueue cmdQueue, Logger logger){
-        jedis = redisPubSubServer;
-        pccp = new PccpFactory();
+    public CommandsListener(Jedis subscriber, Jedis publisher, String pccpChannel,
+            String fscpChannel, Scheduler scheduler, ArrayBlockingQueue cmdQueue, Logger logger){
+        jedis = subscriber;
+        pccp = new PccpFactory(publisher, fscpChannel, scheduler, logger);
         this.logger = logger;
         this.pccpChannel = pccpChannel;
         this.cmdQueue = cmdQueue;

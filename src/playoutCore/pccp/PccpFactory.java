@@ -1,10 +1,13 @@
-package playoutCore.commands;
+package playoutCore.pccp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import playoutCore.commands.pccp.PccpCLEARALL;
-import playoutCore.commands.pccp.PccpPLAYNOW;
-import playoutCore.commands.pccp.PccpPSCHED;
+import java.util.logging.Logger;
+import org.quartz.Scheduler;
+import playoutCore.pccp.commands.PccpCLEARALL;
+import playoutCore.pccp.commands.PccpPLAYNOW;
+import playoutCore.pccp.commands.PccpPSCHED;
+import redis.clients.jedis.Jedis;
 
 /**
  * Playout Core Command Protocol.
@@ -14,6 +17,19 @@ import playoutCore.commands.pccp.PccpPSCHED;
  * @author rombus
  */
 public class PccpFactory {
+    private final Jedis publisher;
+    private final String fscpChannel;
+    private final Scheduler scheduler;
+    private final Logger logger;
+    
+    public PccpFactory(Jedis publisher, String fscpChannel, Scheduler scheduler, Logger logger){
+        this.publisher = publisher;
+        this.fscpChannel = fscpChannel;
+        this.scheduler = scheduler;
+        this.logger = logger;
+    }
+
+
     /**
      * Supported commands
      */
@@ -37,7 +53,8 @@ public class PccpFactory {
             return null;
         }
 
-        public static PccpCommand convertCmdStrToObj(String opcode, ArrayList<String> args){
+        public static PccpCommand convertCmdStrToObj(String opcode, 
+                ArrayList<String> args, Jedis publisher, String fscpChannel, Scheduler scheduler, Logger logger){
             Commands oc = getEnumFromString(opcode);
 
             //TODO object pool for PccpCommands
@@ -46,7 +63,7 @@ public class PccpFactory {
                     case PSCHED:
                         return new PccpPSCHED(args);
                     case PLAYNOW:
-                        return new PccpPLAYNOW(args);
+                        return new PccpPLAYNOW(args, publisher, fscpChannel, scheduler, logger);
                     case CLEARALL:
                         return new PccpCLEARALL();
                 }
@@ -67,7 +84,7 @@ public class PccpFactory {
         String opcode = explodedCmd[0];
         ArrayList<String> args = new ArrayList<>(Arrays.asList(Arrays.copyOfRange(explodedCmd, 1, explodedCmd.length)));
 
-        PccpCommand cmd = Commands.convertCmdStrToObj(opcode, args);
+        PccpCommand cmd = Commands.convertCmdStrToObj(opcode, args, publisher, fscpChannel, scheduler, logger);
         return cmd;
     }
 }

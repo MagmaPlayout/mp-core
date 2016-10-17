@@ -1,11 +1,11 @@
-package playoutCore.commands.pccp;
+package playoutCore.pccp.commands;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import meltedBackend.commands.MeltedCmdFactory;
 import meltedBackend.common.MeltedCommandException;
-import playoutCore.commands.PccpCommand;
 import playoutCore.dataStore.DataStore;
+import playoutCore.mvcp.MvcpCmdFactory;
+import playoutCore.pccp.PccpCommand;
 
 /**
  *  This command cleans Melted's playlists, removing all clips from it.
@@ -16,14 +16,13 @@ public class PccpCLEARALL extends PccpCommand {
     private static final int ID = 0;
 
     @Override
-    public boolean execute(MeltedCmdFactory factory, DataStore store) {
+    public boolean execute(MvcpCmdFactory factory, DataStore store) {
         String unit = "U0";
 
         try {
-            factory.getNewStopCmd(unit).exec();
-            factory.getNewCleanCmd(unit).exec();
-            factory.getNewRemoveCmd(unit).exec();
-            store.resetPlaylist();
+            factory.getStop(unit).exec();
+            factory.getClean(unit).exec();
+            factory.getRemove(unit).exec();
         } catch (MeltedCommandException ex) {
             //TODO handle errors
             Logger.getLogger(PccpCLEARALL.class.getName()).log(Level.SEVERE, null, ex);

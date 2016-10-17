@@ -3,10 +3,12 @@ package playoutCore.producerConsumer;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import meltedBackend.commands.MeltedCmdFactory;
 import meltedBackend.common.MeltedClient;
-import playoutCore.commands.PccpCommand;
+import org.quartz.Scheduler;
 import playoutCore.dataStore.DataStore;
+import playoutCore.mvcp.MvcpCmdFactory;
+import playoutCore.pccp.PccpCommand;
+import redis.clients.jedis.Jedis;
 
 /**
  * This class consumes the PccpCommand queue calling execute() on each object.
@@ -14,14 +16,15 @@ import playoutCore.dataStore.DataStore;
  * @author rombus
  */
 public class CommandsExecutor implements Runnable {
-    private final MeltedCmdFactory meltedCmdFactory;
+    private final MvcpCmdFactory meltedCmdFactory;
     private final DataStore store;
     private final ArrayBlockingQueue<PccpCommand> commandQueue;
     private final Logger logger;
     private boolean keepRunning;
 
-    public CommandsExecutor(MeltedClient melted, DataStore store, ArrayBlockingQueue<PccpCommand> commandQueue, Logger logger){
-        this.meltedCmdFactory = new MeltedCmdFactory(melted);
+    public CommandsExecutor(MeltedClient melted, DataStore store, Jedis publisher, 
+            String fscpChannel, Scheduler scheduler, ArrayBlockingQueue<PccpCommand> commandQueue, Logger logger){
+        this.meltedCmdFactory = new MvcpCmdFactory(melted, store, scheduler, logger);
         this.store = store;
         this.commandQueue = commandQueue;
         this.logger = logger;
