@@ -99,9 +99,9 @@ public class ConfigurationManager {
         p.setProperty(MELTED_RECONNECTION_TIMEOUT_KEY, "1000");
         p.setProperty(MELTED_RECONNECTION_TRIES_KEY, "0");
 
-        p.setProperty(MELT_PATH_KEY, "/usr/bin/melt/");
-        p.setProperty(FILTER_SERVER_URL_KEY, "localhost:3003");
-        p.setProperty(BASH_TIMEOUT_KEY, "1000");
+        p.setProperty(MELT_PATH_KEY, "/usr/bin/melt/melt");
+        p.setProperty(FILTER_SERVER_URL_KEY, "http://localhost:3001/filter-banner.html");
+        p.setProperty(BASH_TIMEOUT_KEY, "5000");
 
         return p;
     }

@@ -23,6 +23,9 @@ public class RedisStore implements DataStore {
     private static final String FILTER_LIST_KEY = "filterList"; // Json KEY that stores all the filters available
     private static final String FILTER_HTML_KEY = "htmlCode";   // Json KEY that stores the actual filter data
     private static final String DURATION_KEY = "duration";      // Json KEY that stores the duration of the clip
+    private static final String FRAMELEN_KEY = "frames";        // Json KEY that stores the length of the clip in frames
+    private static final String FPS_KEY = "fps";                // Json KEY that stores the fps of the clip
+
 
     private final Jedis server;
     private final Logger logger;
@@ -33,7 +36,7 @@ public class RedisStore implements DataStore {
     }
 
     @Override
-    public ArrayList<Clip> getPlaylistClips(String playlistId) {
+    public ArrayList<Clip> getPlaylistClips(String playlistId) throws DataException{
         ArrayList<Clip> pathList = null;
         String jsonString = server.get(playlistId);
 
@@ -48,12 +51,19 @@ public class RedisStore implements DataStore {
                 String path = curObj.getAsJsonPrimitive(PATH_KEY).toString();
                 String filterId = curObj.getAsJsonPrimitive(FILTER_JSON_KEY).toString().replace("\"", "");
                 Duration duration = Duration.parse(curObj.getAsJsonPrimitive(DURATION_KEY).toString().replace("\"", ""));
-                
-                pathList.add(new Clip(path, duration, (filterId.isEmpty())? Clip.NO_FILTER : Integer.parseInt(filterId)));
+                int frameLen = curObj.getAsJsonPrimitive(FRAMELEN_KEY).getAsInt();
+                int fps = curObj.getAsJsonPrimitive(FPS_KEY).getAsInt();
+
+                if(filterId.isEmpty()){
+                    pathList.add(new Clip(path, duration));
+                }
+                else {
+                    pathList.add(new Clip(path, duration, frameLen, fps, Integer.parseInt(filterId)));
+                }
             }
         }
         catch(NullPointerException e){
-            logger.log(Level.SEVERE, "RedisStore - Couldn't parse response.");
+            throw new DataException("Playout Core - Could not fetch a required key from the clips data store.");
         }
         
         return pathList;

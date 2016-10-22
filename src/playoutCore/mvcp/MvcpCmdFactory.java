@@ -44,29 +44,29 @@ public class MvcpCmdFactory {
 
         // If the clip has a filter I create an mlt xml to load into melted
         if(clip.filterId != Clip.NO_FILTER){
-            String filter = store.getFilter(clip.filterId);
-            path = createMltFile(clip.path);
+            path = createMltFile(clip.path, clip.frameLen, clip.fps);
         }
 
         return factory.getNewApndCmd(unit, path);
     }
 
-    private String createMltFile(String clip) throws MeltedCommandException{
+    private String createMltFile(String clip, int frameLen, int fps) throws MeltedCommandException{
         clip = clip.replace("\"", "");
-        String xmlPath = clip+"-"+LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)+".xml";
-        String cmdString = melt+"/melt "+clip+" -filter webvfx:"+url+" -consumer xml:"+xmlPath;
+        String xmlPath = clip+"-"+LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)+".mlt";
+        String cmdString = melt+" "+clip+" out="+frameLen+" length="+frameLen+" -filter webvfx:http://"+url+" -consumer xml:"+xmlPath+" frame_rate_num="+fps;
         
         try{
             Process cmd = Runtime.getRuntime().exec(cmdString);
 
             try {
+                logger.log(Level.INFO, "Playout Core - Waiting for the .mlt generation to end...");
                 cmd.waitFor(bashTimeout, TimeUnit.MILLISECONDS);
-                logger.log(Level.INFO, "Playout Core - Created .xml file for clip {0}", clip);
+                logger.log(Level.INFO, "Playout Core - Created .mlt file for clip {0}", clip);
             } catch (InterruptedException ex) {
-                logger.log(Level.WARNING,"Playout Core - Killing XML generation with melted thread.");
+                logger.log(Level.WARNING,"Playout Core - Killing .mlt generation with melted thread.");
             }
         }catch (IOException e){
-            logger.log(Level.WARNING, "Playout Core - Couldn''t create an MLT file for clip {0} with the command {1}", new Object[]{clip, cmdString});
+            logger.log(Level.WARNING, "Playout Core - Could not create an MLT file for clip {0} with the command {1}", new Object[]{clip, cmdString});
             throw new MeltedCommandException("Playout Core - aborted command.");
         }
         

@@ -8,12 +8,14 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import meltedBackend.common.MeltedCommandException;
+import meltedBackend.responseParser.responses.GenericResponse;
 import meltedBackend.responseParser.responses.ListResponse;
 import static org.quartz.JobBuilder.newJob;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleTrigger;
 import static org.quartz.TriggerBuilder.newTrigger;
+import playoutCore.dataStore.DataException;
 import playoutCore.dataStore.DataStore;
 import playoutCore.dataStore.dataStructures.Clip;
 import playoutCore.mvcp.MvcpCmdFactory;
@@ -46,10 +48,12 @@ public class PccpPLAYNOW extends PccpCommand {
     @Override
     public boolean execute(MvcpCmdFactory factory, DataStore store) {
         String id = args.get(ID);
-        ArrayList<Clip> clips = store.getPlaylistClips(id);
-        
-        // Couldn't parse clips, nothing more to do here
-        if(clips == null){
+        ArrayList<Clip> clips;
+
+        try {
+            clips = store.getPlaylistClips(id);
+        } catch (DataException e) {
+            logger.log(Level.SEVERE, e.getMessage());
             return false;
         }
 
@@ -60,8 +64,7 @@ public class PccpPLAYNOW extends PccpCommand {
         try {
             lastClipId = ((ListResponse)factory.getList(unit).exec()).getPlaylistLength()-1;
         } catch (MeltedCommandException ex) {
-            //TODO handle error. Coudln't get playlistLength
-            Logger.getLogger(PccpPLAYNOW.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, "Playout Core - An error occured while executing the LIST melted command. Cannot get playlist lenght!");
             return false;
         }
 
@@ -70,8 +73,14 @@ public class PccpPLAYNOW extends PccpCommand {
         boolean first = true;
         for(Clip clip: clips){
             try {
-                factory.getApnd(unit, clip, first).exec();
+                GenericResponse r = factory.getApnd(unit, clip, first).exec();
                 
+                if(!r.cmdOk()){
+                    logger.log(Level.WARNING, "Playout Core - Could not append clip {0} Melted error: {1}. "
+                            + "Check the bash_timeout configuration key.", new Object[]{clip.path, r.getStatus()});
+                    return false;
+                }
+
                 // Move cursor to the first added clip of this playlist
                 if(first){
                     first = false;                    
@@ -85,7 +94,9 @@ public class PccpPLAYNOW extends PccpCommand {
                     }
                 }
                 else if(clip.filterId != Clip.NO_FILTER){
-                    // TODO schedule filterId change
+                    // TODO hardcoded timezone compensation
+                    logger.log(Level.SEVERE, "TODO - HARDCODED TIMEZONE INFORMATION!!!");
+
                     Date d = Date.from(start.plus(playlistLength).plusHours(3).toInstant(ZoneOffset.UTC));
                     SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
                     logger.log(Level.INFO, "Playout Core - Scheduling filter change at: {0}", d.toString());
@@ -98,10 +109,9 @@ public class PccpPLAYNOW extends PccpCommand {
                     }
                 }
                 playlistLength = playlistLength.plus(clip.len);
+                logger.log(Level.INFO, "Playout Core - Playlist length: {0}", playlistLength.toString());
             } catch (MeltedCommandException ex) {
-                //TODO handle errors
-                Logger.getLogger(PccpPLAYNOW.class.getName()).log(Level.SEVERE, " PUDRO LA TORTA ");
-
+                logger.log(Level.SEVERE, "Playout Core - An error occured during the execution of the PLAYNOW PCCP command. Possibly by a misconfigured melt path configuration");
                 return false;
             }
         }

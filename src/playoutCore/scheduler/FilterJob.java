@@ -26,8 +26,7 @@ public class FilterJob implements Job{
 
     @Override
     public void execute(JobExecutionContext jec) throws JobExecutionException {
-//        System.out.println("MANDAR CAMBIO A REDIS");
-        publisher.publish(channel, String.valueOf(filter)); // Tell the Filter Server to change it's filterId
+        publisher.publish(channel, "SETFILTER "+String.valueOf(filter)); // Tell the Filter Server to change it's filterId
         logger.log(Level.INFO, "Playout Core - Executing scheduled filter change.");
     }
 }
