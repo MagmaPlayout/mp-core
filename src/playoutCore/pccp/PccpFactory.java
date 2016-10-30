@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 import org.quartz.Scheduler;
 import playoutCore.pccp.commands.PccpCLEARALL;
 import playoutCore.pccp.commands.PccpPLAYNOW;
-import playoutCore.pccp.commands.PccpPSCHED;
+import playoutCore.pccp.commands.PccpPLSCHED;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -36,7 +36,7 @@ public class PccpFactory {
     private enum Commands {
         PLAYNOW,    // Plays given playlist as soon as it can. PLAYNOW <playlist id>
         CLEARALL,   // Removes everything from the playlist. No arguments.
-        PSCHED,     // Schedules a given playlist. PSCHED <name> <timestamp>
+        PLSCHED,     // Schedules a given playlist. PLSCHED <playlist id> <timestamp>
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id
@@ -60,8 +60,8 @@ public class PccpFactory {
             //TODO object pool for PccpCommands
             if(oc != null){
                 switch(oc){
-                    case PSCHED:
-                        return new PccpPSCHED(args);
+                    case PLSCHED:
+                        return new PccpPLSCHED(args, scheduler, logger);
                     case PLAYNOW:
                         return new PccpPLAYNOW(args, publisher, fscpChannel, scheduler, logger);
                     case CLEARALL:

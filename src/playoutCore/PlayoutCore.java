@@ -9,9 +9,11 @@ import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 import playoutCore.dataStore.DataStore;
 import playoutCore.dataStore.RedisStore;
+import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.producerConsumer.CommandsExecutor;
 import playoutCore.producerConsumer.CommandsListener;
+import playoutCore.scheduler.SchedulerJobFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
@@ -82,15 +84,9 @@ public class PlayoutCore {
          * Start's the command executor thread.
          */
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsExecutor thread...");
-        Scheduler scheduler = null;
-        try {
-            scheduler = new StdSchedulerFactory().getScheduler();
-            scheduler.start();
-        } catch (SchedulerException ex) {
-            Logger.getLogger(PlayoutCore.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        CommandsExecutor executor = new CommandsExecutor(melted, store,
-                redisPublisher, cfg.getRedisFscpChannel(), scheduler, commandsQueue, logger);
+        MvcpCmdFactory factory = new MvcpCmdFactory(melted, store, logger);
+        CommandsExecutor executor = new CommandsExecutor(factory, store,
+                redisPublisher, cfg.getRedisFscpChannel(), commandsQueue, logger);
         
         Thread executorThread = new Thread(executor);
         executorThread.start(); // TODO: handle reconnection
@@ -99,6 +95,15 @@ public class PlayoutCore {
         /**
          * Start's the command listener thread.
          */
+        Scheduler scheduler = null;
+        try {
+            scheduler = new StdSchedulerFactory().getScheduler();
+            scheduler.setJobFactory(new SchedulerJobFactory(redisPublisher, cfg.getRedisFscpChannel(), factory, logger));
+            scheduler.start();
+        } catch (SchedulerException ex) {
+            Logger.getLogger(PlayoutCore.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsListener thread...");
         CommandsListener listener = new CommandsListener(redisPCCPSubscriber, redisPublisher,
                 cfg.getRedisPccpChannel(), cfg.getRedisFscpChannel(), scheduler, commandsQueue, logger);

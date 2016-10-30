@@ -3,8 +3,6 @@ package playoutCore.producerConsumer;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import meltedBackend.common.MeltedClient;
-import org.quartz.Scheduler;
 import playoutCore.dataStore.DataStore;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
@@ -22,9 +20,9 @@ public class CommandsExecutor implements Runnable {
     private final Logger logger;
     private boolean keepRunning;
 
-    public CommandsExecutor(MeltedClient melted, DataStore store, Jedis publisher, 
-            String fscpChannel, Scheduler scheduler, ArrayBlockingQueue<PccpCommand> commandQueue, Logger logger){
-        this.meltedCmdFactory = new MvcpCmdFactory(melted, store, scheduler, logger);
+    public CommandsExecutor(MvcpCmdFactory factory, DataStore store, Jedis publisher,
+            String fscpChannel, ArrayBlockingQueue<PccpCommand> commandQueue, Logger logger){
+        this.meltedCmdFactory = factory;
         this.store = store;
         this.commandQueue = commandQueue;
         this.logger = logger;

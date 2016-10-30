@@ -11,7 +11,6 @@ import meltedBackend.commands.MeltedCmdApnd;
 import meltedBackend.commands.MeltedCmdFactory;
 import meltedBackend.common.MeltedClient;
 import meltedBackend.common.MeltedCommandException;
-import org.quartz.Scheduler;
 import playoutCore.ConfigurationManager;
 import playoutCore.dataStore.DataStore;
 import playoutCore.dataStore.dataStructures.Clip;
@@ -28,7 +27,7 @@ public class MvcpCmdFactory {
     private final String melt, url;
     private final int bashTimeout;
 
-    public MvcpCmdFactory(MeltedClient melted, DataStore store,  Scheduler scheduler, Logger logger){
+    public MvcpCmdFactory(MeltedClient melted, DataStore store, Logger logger){
         factory = new MeltedCmdFactory(melted);
         this.store = store;
         this.logger = logger;
@@ -39,7 +38,7 @@ public class MvcpCmdFactory {
         bashTimeout = cfg.getMeltXmlTimeout();
     }
 
-    public MeltedCmdApnd getApnd(String unit, Clip clip, boolean firstInPlaylist) throws MeltedCommandException{
+    public MeltedCmdApnd getApnd(String unit, Clip clip) throws MeltedCommandException{
         String path = clip.path;
 
         // If the clip has a filter I create an mlt xml to load into melted

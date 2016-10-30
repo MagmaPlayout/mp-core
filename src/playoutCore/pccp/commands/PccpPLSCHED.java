@@ -21,31 +21,28 @@ import playoutCore.dataStore.dataStructures.Clip;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.scheduler.FilterJob;
-import redis.clients.jedis.Jedis;
+import playoutCore.scheduler.PlSchedJob;
 
 /**
- *  This command loads all clips of a given playlist into melted and moves the cursor to the first loaded clip frame.
- * 
+ *
  * @author rombus
  */
-public class PccpPLAYNOW extends PccpCommand {
+public class PccpPLSCHED extends PccpCommand {
     private static final int ID = 0;
+    private static final int TIME = 1;
     private final Logger logger;
-    private final Jedis publisher;
-    private final String fscpChannel;
     private final Scheduler scheduler;
 
-    public PccpPLAYNOW(ArrayList<String> args, Jedis publisher, String fscpChannel, Scheduler scheduler, Logger logger){
+    public PccpPLSCHED(ArrayList<String> args, Scheduler scheduler, Logger logger){
         super(args);
-        this.publisher = publisher;
         this.scheduler = scheduler;
-        this.fscpChannel = fscpChannel;
         this.logger = logger;
     }
 
     @Override
     public boolean execute(MvcpCmdFactory factory, DataStore store) {
         String id = args.get(ID);
+        String timeStamp = args.get(TIME);
         ArrayList<Clip> clips;
 
         try {
@@ -58,42 +55,55 @@ public class PccpPLAYNOW extends PccpCommand {
         //TODO hardcoded unit
         String unit = "U0";
         int lastClipId = 0;
-        
+
         try {
-            lastClipId = ((ListResponse)factory.getList(unit).exec()).getPlaylistLength()-1;
+            lastClipId = ((ListResponse)factory.getList(unit).exec()).getPlaylistLength();
         } catch (MeltedCommandException ex) {
             logger.log(Level.SEVERE, "Playout Core - An error occured while executing the LIST melted command. Cannot get playlist lenght!");
             return false;
         }
-
-        LocalDateTime start = null;
+        
+        timeStamp = timeStamp.split("\\.")[0]; // Removes .000Z of the end that's not compatible with LocalDateTime
+        LocalDateTime start = LocalDateTime.parse(timeStamp);
         Duration playlistLength = Duration.ZERO;
         boolean first = true;
         for(Clip clip: clips){
             try {
                 GenericResponse r = factory.getApnd(unit, clip).exec();
-                
+
                 if(!r.cmdOk()){
                     logger.log(Level.WARNING, "Playout Core - Could not append clip {0} Melted error: {1}. "
                             + "Check the bash_timeout configuration key.", new Object[]{clip.path, r.getStatus()});
                     return false;
                 }
 
-                // Move cursor to the first added clip of this playlist
+                // Schedulles the movement of the cursor to the first added clip of this playlist
                 if(first){
-                    first = false;                    
-                    factory.getGoto(unit, 0, lastClipId).exec();
-                    factory.getPlay(unit).exec();
-                    start = LocalDateTime.now();
-                    
+                    first = false;
+                    int filter = Clip.NO_FILTER;
                     if(clip.filterId != Clip.NO_FILTER){
-                        publisher.publish(fscpChannel, "SETFILTER "+String.valueOf(clip.filterId)); // Tell the Filter Server to change it's filterId
-                        logger.log(Level.INFO, "Playout Core - Setting filter server filter id:{0}", clip.filterId);
+                        filter = clip.filterId;
+                    }
+
+                    //TODO HARDCODED TIMEZONE
+                    Date d = Date.from(start.plusHours(3).toInstant(ZoneOffset.UTC));
+                    logger.log(Level.INFO, "Playout Core - Playlist scheduled at: {0}", d.toString());
+                    SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
+
+                    try {
+                        scheduler.scheduleJob(newJob(PlSchedJob.class)
+                                .usingJobData("filterId", filter)
+                                .usingJobData("firstClipId", lastClipId + 1)
+                                .build(), trigger);
+
+                        logger.log(Level.INFO, "Playout Core - Playlist scheduled at {0}", d.toString());
+                    } catch (SchedulerException ex) {
+                        logger.log(Level.SEVERE, "Playout Core - Error while shcedulling playlist.");
+                        return false;
                     }
                 }
                 else if(clip.filterId != Clip.NO_FILTER){
                     // TODO hardcoded timezone compensation
-                    logger.log(Level.SEVERE, "TODO - HARDCODED TIMEZONE INFORMATION!!!");
                     Date d = Date.from(start.plus(playlistLength).plusHours(3).minusSeconds(1).toInstant(ZoneOffset.UTC));
                     SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
                     logger.log(Level.INFO, "Playout Core - Scheduling filter change at: {0}", d.toString());
@@ -105,13 +115,13 @@ public class PccpPLAYNOW extends PccpCommand {
                     }
                 }
                 playlistLength = playlistLength.plus(clip.len);
-                logger.log(Level.INFO, "Playout Core - Playlist length: {0}", playlistLength.toString());
             } catch (MeltedCommandException ex) {
                 logger.log(Level.SEVERE, "Playout Core - An error occured during the execution of the PLAYNOW PCCP command. Possibly by a misconfigured melt path configuration");
                 return false;
             }
         }
-        
+        logger.log(Level.INFO, "Playout Core - Playlist length: {0}", playlistLength.toString());
+
         return true;
     }
 }

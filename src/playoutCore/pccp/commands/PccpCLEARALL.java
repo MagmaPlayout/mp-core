@@ -17,12 +17,14 @@ public class PccpCLEARALL extends PccpCommand {
 
     @Override
     public boolean execute(MvcpCmdFactory factory, DataStore store) {
+        //TODO hardcoded unit
         String unit = "U0";
 
         try {
             factory.getStop(unit).exec();
             factory.getClean(unit).exec();
             factory.getRemove(unit).exec();
+            Logger.getLogger(PccpCLEARALL.class.getName()).log(Level.INFO, "Playout Core - Melted clips removed.");
         } catch (MeltedCommandException ex) {
             //TODO handle errors
             Logger.getLogger(PccpCLEARALL.class.getName()).log(Level.SEVERE, null, ex);
