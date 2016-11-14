@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import playoutCore.dataStore.dataStructures.Clip;
@@ -38,11 +39,11 @@ public class RedisStore implements DataStore {
     @Override
     public ArrayList<Clip> getPlaylistClips(String playlistId) throws DataException{
         ArrayList<Clip> pathList = null;
-        String jsonString = server.get(playlistId);
+        HashMap<String, String> hm = (HashMap<String, String>)server.hgetAll("playlist:"+playlistId);
+        String jsonString = hm.get(CLIPS_KEY);
 
         try{
-            JsonElement data = new JsonParser().parse(jsonString);
-            JsonArray clips = data.getAsJsonObject().getAsJsonArray(CLIPS_KEY);
+            JsonArray clips = new JsonParser().parse(jsonString).getAsJsonArray();
 
             pathList = new ArrayList<>();
             for(JsonElement clip: clips){
