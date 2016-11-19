@@ -72,6 +72,7 @@ public class PccpPLSCHED extends PccpCommand {
                 GenericResponse r = factory.getApnd(unit, clip).exec();
 
                 if(!r.cmdOk()){
+                    //TODO make this like a transaction, if one fails then remove the loaded clips of this failed playlist
                     logger.log(Level.WARNING, "Playout Core - Could not append clip {0} Melted error: {1}. "
                             + "Check the bash_timeout configuration key.", new Object[]{clip.path, r.getStatus()});
                     return false;
@@ -87,13 +88,12 @@ public class PccpPLSCHED extends PccpCommand {
 
                     //TODO HARDCODED TIMEZONE
                     Date d = Date.from(start.plusHours(3).toInstant(ZoneOffset.UTC));
-                    logger.log(Level.INFO, "Playout Core - Playlist scheduled at: {0}", d.toString());
                     SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
 
                     try {
                         scheduler.scheduleJob(newJob(PlSchedJob.class)
                                 .usingJobData("filterId", filter)
-                                .usingJobData("firstClipId", lastClipId + 1)
+                                .usingJobData("firstClipId", lastClipId)
                                 .build(), trigger);
 
                         logger.log(Level.INFO, "Playout Core - Playlist scheduled at {0}", d.toString());
@@ -104,7 +104,7 @@ public class PccpPLSCHED extends PccpCommand {
                 }
                 else if(clip.filterId != Clip.NO_FILTER){
                     // TODO hardcoded timezone compensation
-                    Date d = Date.from(start.plus(playlistLength).plusHours(3).minusSeconds(1).toInstant(ZoneOffset.UTC));
+                    Date d = Date.from(start.plus(playlistLength).plusHours(3).toInstant(ZoneOffset.UTC));
                     SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
                     logger.log(Level.INFO, "Playout Core - Scheduling filter change at: {0}", d.toString());
 

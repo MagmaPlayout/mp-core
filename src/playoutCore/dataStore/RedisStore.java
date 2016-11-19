@@ -66,6 +66,9 @@ public class RedisStore implements DataStore {
         catch(NullPointerException e){
             throw new DataException("Playout Core - Could not fetch a required key from the clips data store.");
         }
+        catch(IllegalStateException e){
+            throw new DataException("Playout Core - Clip data corrupted.");
+        }
         
         return pathList;
     }
