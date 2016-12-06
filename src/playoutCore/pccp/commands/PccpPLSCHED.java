@@ -104,7 +104,7 @@ public class PccpPLSCHED extends PccpCommand {
                 }
                 else if(clip.filterId != Clip.NO_FILTER){
                     // TODO hardcoded timezone compensation
-                    Date d = Date.from(start.plus(playlistLength).plusHours(3).toInstant(ZoneOffset.UTC));
+                    Date d = Date.from(start.plus(playlistLength).plusHours(3).plusSeconds(1).toInstant(ZoneOffset.UTC));
                     SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
                     logger.log(Level.INFO, "Playout Core - Scheduling filter change at: {0}", d.toString());
 
