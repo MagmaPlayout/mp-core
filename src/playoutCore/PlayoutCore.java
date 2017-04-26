@@ -8,7 +8,7 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 import playoutCore.dataStore.DataStore;
-import playoutCore.dataStore.RedisStore;
+import playoutCore.dataStore.RestStore;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.producerConsumer.CommandsExecutor;
@@ -57,11 +57,10 @@ public class PlayoutCore {
         
         
         /**
-         * Connect to Redis Store server.
+         * Connect to the DataStore server.
          */
-        logger.log(Level.INFO, "Playout Core - Attempt to connect to Redis store server...");
-        Jedis redisStoreServer = new Jedis(cfg.getRedisHost(), cfg.getRedisPort(), cfg.getRedisReconnectionTimeout());
-        DataStore store = new RedisStore(redisStoreServer, logger);
+        logger.log(Level.INFO, "Playout Core - Attempt to connect to the store server...");
+        DataStore store = new RestStore(cfg.getRestBaseUrl(), logger);
         
 
         /**

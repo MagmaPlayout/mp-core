@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 import org.quartz.Scheduler;
 import playoutCore.pccp.commands.PccpCLEARALL;
 import playoutCore.pccp.commands.PccpPLAYNOW;
+import playoutCore.pccp.commands.PccpPLPLAYNOW;
 import playoutCore.pccp.commands.PccpPLSCHED;
 import redis.clients.jedis.Jedis;
 
@@ -34,9 +35,10 @@ public class PccpFactory {
      * Supported commands
      */
     private enum Commands {
-        PLAYNOW,    // Plays given playlist as soon as it can. PLAYNOW <playlist id>
+        PLAYNOW,    // Plays given clip as soon as it can. PLAYNOW <clip id>
+        PLPLAYNOW,  // Plays given playlist as soon as it can. PLAYNOW <playlist id>
         CLEARALL,   // Removes everything from the playlist. No arguments.
-        PLSCHED,     // Schedules a given playlist. PLSCHED <playlist id> <timestamp>
+        PLSCHED,    // Schedules a given playlist. PLSCHED <playlist id> <timestamp>
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id
@@ -59,14 +61,23 @@ public class PccpFactory {
 
             //TODO object pool for PccpCommands
             if(oc != null){
+                PccpCommand cmd = null;
                 switch(oc){
                     case PLSCHED:
-                        return new PccpPLSCHED(args, scheduler, logger);
+                        cmd = new PccpPLSCHED(args, scheduler, logger);
+                        break;
                     case PLAYNOW:
-                        return new PccpPLAYNOW(args, publisher, fscpChannel, scheduler, logger);
+                        cmd = new PccpPLAYNOW(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case PLPLAYNOW:
+                        cmd = new PccpPLPLAYNOW(args, publisher, fscpChannel, scheduler, logger);
+                        break;
                     case CLEARALL:
-                        return new PccpCLEARALL();
+                        cmd = new PccpCLEARALL();
+                        break;
                 }
+                
+                return cmd;
             }
 
             return null;

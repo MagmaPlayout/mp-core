@@ -36,6 +36,8 @@ public class ConfigurationManager {
 
     private static final String BASH_TIMEOUT_KEY = "bash_timeout_ms";
 
+    private static final String REST_BASE_URL = "rest_base_url";
+
     private Properties properties;
 
     private ConfigurationManager(){
@@ -103,6 +105,8 @@ public class ConfigurationManager {
         p.setProperty(FILTER_SERVER_URL_KEY, "http://localhost:3001/filter-banner.html");
         p.setProperty(BASH_TIMEOUT_KEY, "5000");
 
+        p.setProperty(REST_BASE_URL, "localhost:8001/api/");
+
         return p;
     }
 
@@ -152,5 +156,9 @@ public class ConfigurationManager {
     }
     public int getMeltXmlTimeout(){
         return Integer.parseInt(properties.getProperty(BASH_TIMEOUT_KEY));
+    }
+
+    public String getRestBaseUrl(){
+        return properties.getProperty(REST_BASE_URL);
     }
 }

@@ -88,4 +88,9 @@ public class RedisStore implements DataStore {
 
         return filterString;
     }
+
+    @Override
+    public Clip getClip(String id) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
