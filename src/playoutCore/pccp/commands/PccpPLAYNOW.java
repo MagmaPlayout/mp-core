@@ -21,7 +21,6 @@ import redis.clients.jedis.Jedis;
  * @author rombus
  */
 public class PccpPLAYNOW extends PccpCommand {
-    private static final int ID = 0;
     private final Logger logger;
     private final Jedis publisher;
     private final String fscpChannel;
@@ -81,5 +80,10 @@ public class PccpPLAYNOW extends PccpCommand {
         }
         
         return true;
+    }
+
+    @Override
+    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory, DataStore store) {
+        throw new UnsupportedOperationException("This command does not implement the executeForResponse method.");
     }
 }

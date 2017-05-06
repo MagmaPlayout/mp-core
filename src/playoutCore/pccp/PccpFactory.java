@@ -39,6 +39,8 @@ public class PccpFactory {
         PLPLAYNOW,  // Plays given playlist as soon as it can. PLAYNOW <playlist id>
         CLEARALL,   // Removes everything from the playlist. No arguments.
         PLSCHED,    // Schedules a given playlist. PLSCHED <playlist id> <timestamp>
+        GETPL,      // Returns the playlist loaded in melted plus the clips that will be added to melted in schedule
+        GETTIMERS,  // Returns a JSON with the 3 timers (uptime, clip time, playlist remaining time)
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id

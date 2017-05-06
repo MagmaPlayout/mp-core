@@ -1,5 +1,6 @@
 package playoutCore.pccp.commands;
 
+import com.google.gson.JsonObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import meltedBackend.common.MeltedCommandException;
@@ -13,8 +14,7 @@ import playoutCore.pccp.PccpCommand;
  * @author rombus
  */
 public class PccpCLEARALL extends PccpCommand {
-    private static final int ID = 0;
-
+    
     @Override
     public boolean execute(MvcpCmdFactory factory, DataStore store) {
         //TODO hardcoded unit
@@ -32,5 +32,10 @@ public class PccpCLEARALL extends PccpCommand {
         }
         
         return true;
+    }
+
+    @Override
+    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory, DataStore store) {
+        throw new UnsupportedOperationException("This command does not implement the executeForResponse method.");
     }
 }

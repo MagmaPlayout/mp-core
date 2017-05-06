@@ -32,6 +32,8 @@ public abstract class PccpCommand {
 
     public abstract boolean execute(MvcpCmdFactory meltedCmdFactory, DataStore store);
 
+    public abstract JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory, DataStore store);
+
     /**
      * Receives a JsonObject that needs to have a single Clip representation.
      * For parsing multiple clips call this function inside a loop.

@@ -74,8 +74,6 @@ public class MvcpCmdFactory {
     }
 
 
-
-
     public MeltedCmd getList(String unit){
         return factory.getNewListCmd(unit);
     }
@@ -98,5 +96,9 @@ public class MvcpCmdFactory {
 
     public MeltedCmd getClean(String unit){
         return factory.getNewCleanCmd(unit);
+    }
+
+    public MeltedCmd getWipe(String unit){
+        return factory.getNewWipeCmd(unit);
     }
 }
