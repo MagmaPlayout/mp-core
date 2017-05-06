@@ -1,7 +1,7 @@
 package playoutCore.pccp;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
 import playoutCore.pccp.commands.PccpCLEARALL;
@@ -22,7 +22,7 @@ public class PccpFactory {
     private final String fscpChannel;
     private final Scheduler scheduler;
     private final Logger logger;
-    
+
     public PccpFactory(Jedis publisher, String fscpChannel, Scheduler scheduler, Logger logger){
         this.publisher = publisher;
         this.fscpChannel = fscpChannel;
@@ -55,8 +55,8 @@ public class PccpFactory {
             return null;
         }
 
-        public static PccpCommand convertCmdStrToObj(String opcode, 
-                ArrayList<String> args, Jedis publisher, String fscpChannel, Scheduler scheduler, Logger logger){
+        public static PccpCommand convertCmdStrToObj(String opcode, JsonObject args, Jedis publisher,
+                String fscpChannel, Scheduler scheduler, Logger logger){
             Commands oc = getEnumFromString(opcode);
 
             //TODO object pool for PccpCommands
@@ -76,7 +76,7 @@ public class PccpFactory {
                         cmd = new PccpCLEARALL();
                         break;
                 }
-                
+
                 return cmd;
             }
 
@@ -86,14 +86,14 @@ public class PccpFactory {
 
     /**
      * Converts a command string into a PccpCommand object
-     * 
+     *
      * @param commandString
      * @return
      */
     public PccpCommand getCommand(String commandString){
         String[] explodedCmd = commandString.split(" ");
         String opcode = explodedCmd[0];
-        ArrayList<String> args = new ArrayList<>(Arrays.asList(Arrays.copyOfRange(explodedCmd, 1, explodedCmd.length)));
+        JsonObject args = new JsonParser().parse(explodedCmd[1]).getAsJsonObject();
 
         PccpCommand cmd = Commands.convertCmdStrToObj(opcode, args, publisher, fscpChannel, scheduler, logger);
         return cmd;

@@ -1,15 +1,14 @@
 package playoutCore.pccp.commands;
 
+import com.google.gson.JsonObject;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import meltedBackend.common.MeltedCommandException;
 import meltedBackend.responseParser.responses.GenericResponse;
 import meltedBackend.responseParser.responses.ListResponse;
 import org.quartz.Scheduler;
-import playoutCore.dataStore.DataException;
 import playoutCore.dataStore.DataStore;
 import playoutCore.dataStore.dataStructures.Clip;
 import playoutCore.mvcp.MvcpCmdFactory;
@@ -28,7 +27,7 @@ public class PccpPLAYNOW extends PccpCommand {
     private final String fscpChannel;
     private final Scheduler scheduler;
 
-    public PccpPLAYNOW(ArrayList<String> args, Jedis publisher, String fscpChannel, Scheduler scheduler, Logger logger){
+    public PccpPLAYNOW(JsonObject args, Jedis publisher, String fscpChannel, Scheduler scheduler, Logger logger){
         super(args);
         this.publisher = publisher;
         this.scheduler = scheduler;
@@ -38,15 +37,8 @@ public class PccpPLAYNOW extends PccpCommand {
 
     @Override
     public boolean execute(MvcpCmdFactory factory, DataStore store) {
-        String id = args.get(ID);
-        Clip clip;
-
-        try {
-            clip = store.getClip(id);
-        } catch (DataException e) {
-            logger.log(Level.SEVERE, e.getMessage());
-            return false;
-        }
+        //TODO: validate args lenght, only accepts one clip, that is only one json object.
+        Clip clip = getClipFromJsonArg(args);
 
         //TODO hardcoded unit
         String unit = "U0";

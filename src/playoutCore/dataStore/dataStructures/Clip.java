@@ -15,6 +15,12 @@ public class Clip {
     public final int frameLen;
     public final int fps;
 
+    /**
+     * Creates a Clip object with 0 frameLen, fps and no filter.
+     * 
+     * @param path
+     * @param len
+     */
     public Clip(String path, Duration len){
         this.path = path;
         this.len = len;
@@ -29,5 +35,14 @@ public class Clip {
         this.filterId = filterId;
         this.frameLen = frameLen;
         this.fps = fps;
+    }
+
+    @Override
+    public String toString() {
+        return   "Path: "       + this.path
+               + ", Duration: " + len
+               + "FilterId: "   + filterId
+               + "FrameLen: "   + frameLen
+               + "Fps: "        + fps;
     }
 }
