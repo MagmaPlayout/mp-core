@@ -43,7 +43,7 @@ public abstract class PccpCommand {
      */
     protected Clip getClipFromJsonArg(JsonObject jsonClip){
         //TODO: handle exceptions of malformed jsonClip
-        
+
         String path = args.getAsJsonPrimitive(PATH_KEY).toString();
         Duration duration = Duration.parse(args.getAsJsonPrimitive(DURATION_KEY).toString().replace("\"", ""));
         int filterId = args.getAsJsonPrimitive(FILTER_ID_KEY).getAsInt();

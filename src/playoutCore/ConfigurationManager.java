@@ -24,6 +24,7 @@ public class ConfigurationManager {
     private static final String REDIS_PORT_KEY = "redis_server_port";
     private static final String REDIS_PCCP_CHANNEL_KEY = "redis_pccp_channel";
     private static final String REDIS_FSCP_CHANNEL_KEY = "redis_fscp_channel";
+    private static final String REDIS_PCR_CHANNEL_KEY = "redis_pcr_channel";
     private static final String REDIS_RECONNECTION_TIMEOUT_KEY = "redis_reconnection_timeout";
 
     private static final String MELTED_HOST_KEY = "melted_server_hostname";
@@ -94,6 +95,7 @@ public class ConfigurationManager {
         p.setProperty(REDIS_PORT_KEY, "6379");
         p.setProperty(REDIS_PCCP_CHANNEL_KEY, "PCCP");
         p.setProperty(REDIS_FSCP_CHANNEL_KEY, "FSCP");
+        p.setProperty(REDIS_PCR_CHANNEL_KEY, "PCR");
         p.setProperty(REDIS_RECONNECTION_TIMEOUT_KEY, "1000");
 
         p.setProperty(MELTED_HOST_KEY, "localhost");
@@ -125,6 +127,10 @@ public class ConfigurationManager {
 
     public String getRedisFscpChannel(){
         return properties.getProperty(REDIS_FSCP_CHANNEL_KEY);
+    }
+
+    public String getRedisPcrChannel(){
+        return properties.getProperty(REDIS_PCR_CHANNEL_KEY);
     }
 
     public int getRedisReconnectionTimeout(){

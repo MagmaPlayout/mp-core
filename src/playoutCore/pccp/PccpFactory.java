@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
 import playoutCore.pccp.commands.PccpCLEARALL;
+import playoutCore.pccp.commands.PccpGETPL;
 import playoutCore.pccp.commands.PccpPLAYNOW;
 import playoutCore.pccp.commands.PccpPLPLAYNOW;
 import playoutCore.pccp.commands.PccpPLSCHED;
@@ -19,13 +20,14 @@ import redis.clients.jedis.Jedis;
  */
 public class PccpFactory {
     private final Jedis publisher;
-    private final String fscpChannel;
+    private final String fscpChannel, pcrChannel;
     private final Scheduler scheduler;
     private final Logger logger;
 
-    public PccpFactory(Jedis publisher, String fscpChannel, Scheduler scheduler, Logger logger){
+    public PccpFactory(Jedis publisher, String fscpChannel, String pcrChannel, Scheduler scheduler, Logger logger){
         this.publisher = publisher;
         this.fscpChannel = fscpChannel;
+        this.pcrChannel = pcrChannel;
         this.scheduler = scheduler;
         this.logger = logger;
     }
@@ -58,7 +60,7 @@ public class PccpFactory {
         }
 
         public static PccpCommand convertCmdStrToObj(String opcode, JsonObject args, Jedis publisher,
-                String fscpChannel, Scheduler scheduler, Logger logger){
+                String fscpChannel, String pcrChannel, Scheduler scheduler, Logger logger){
             Commands oc = getEnumFromString(opcode);
 
             //TODO object pool for PccpCommands
@@ -76,6 +78,12 @@ public class PccpFactory {
                         break;
                     case CLEARALL:
                         cmd = new PccpCLEARALL();
+                        break;
+                    case GETPL:
+                        cmd = new PccpGETPL(publisher, pcrChannel);
+                        break;
+                    case GETTIMERS:
+                        System.out.println("GETTIMERS NOT IMPLEMENTED YET!!!");
                         break;
                 }
 
@@ -95,9 +103,19 @@ public class PccpFactory {
     public PccpCommand getCommand(String commandString){
         String[] explodedCmd = commandString.split(" ");
         String opcode = explodedCmd[0];
-        JsonObject args = new JsonParser().parse(explodedCmd[1]).getAsJsonObject();
+        JsonObject args;
 
-        PccpCommand cmd = Commands.convertCmdStrToObj(opcode, args, publisher, fscpChannel, scheduler, logger);
+        if(explodedCmd.length < 2){
+            args = null; // GETPL needs no args
+        }
+        else try {
+            args = new JsonParser().parse(explodedCmd[1]).getAsJsonObject();
+        }catch(IllegalStateException e){ // args is not a json object
+            return null;
+        }
+        
+        //TODO: handle args being null on commands that NEED args.
+        PccpCommand cmd = Commands.convertCmdStrToObj(opcode, args, publisher, fscpChannel, pcrChannel, scheduler, logger);
         return cmd;
     }
 }

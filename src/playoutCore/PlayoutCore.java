@@ -105,7 +105,7 @@ public class PlayoutCore {
 
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsListener thread...");
         CommandsListener listener = new CommandsListener(redisPCCPSubscriber, redisPublisher,
-                cfg.getRedisPccpChannel(), cfg.getRedisFscpChannel(), scheduler, commandsQueue, logger);
+                cfg.getRedisPccpChannel(), cfg.getRedisFscpChannel(), cfg.getRedisPcrChannel(), scheduler, commandsQueue, logger);
 
         Thread listenerThread = new Thread(listener);
         try{

@@ -37,6 +37,11 @@ public class PccpPLAYNOW extends PccpCommand {
     @Override
     public boolean execute(MvcpCmdFactory factory, DataStore store) {
         //TODO: validate args lenght, only accepts one clip, that is only one json object.
+        if(args == null){
+            logger.log(Level.SEVERE, "Playout Core - No arguments found for PLAYNOW PCCP command.");
+            return false;
+        }
+
         Clip clip = getClipFromJsonArg(args);
 
         //TODO hardcoded unit

@@ -1,5 +1,6 @@
 package playoutCore.pccp.commands;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.util.logging.Level;
@@ -9,6 +10,7 @@ import meltedBackend.responseParser.responses.ListResponse;
 import playoutCore.dataStore.DataStore;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
+import redis.clients.jedis.Jedis;
 
 /**
  * This command get's the playlist stored in Melted.
@@ -16,7 +18,14 @@ import playoutCore.pccp.PccpCommand;
  * 
  * @author rombus
  */
-public class PccpGETPL extends PccpCommand{
+public class PccpGETPL extends PccpCommand {
+    private Jedis publisher;
+    private String pcrChannel;
+
+    public PccpGETPL(Jedis publisher, String pcrChannel){
+        this.publisher = publisher;
+        this.pcrChannel = pcrChannel;
+    }
 
     @Override
     public boolean execute(MvcpCmdFactory factory, DataStore store) {
@@ -32,11 +41,13 @@ public class PccpGETPL extends PccpCommand{
             factory.getWipe(unit).exec();
             ListResponse response = (ListResponse)(factory.getList(unit).exec());
             String[] clipsPaths = response.getMeltedPlaylist();
-            
-            for(int i=0; i<clipsPaths.length; i++){
-                result.add("path", new JsonPrimitive(clipsPaths[i]));
-            }
 
+            Gson gson = new Gson();
+            result.add("opcode", new JsonPrimitive("GETPL"));
+            result.add("result", new JsonPrimitive(gson.toJson(clipsPaths)));
+            
+            publisher.publish(pcrChannel, result.toString());
+            //logger.log(Level.INFO, "A response was send to the PCR channel");
         } catch (MeltedCommandException ex) {
             Logger.getLogger(PccpGETPL.class.getName()).log(Level.SEVERE, null, ex);
             return result;
