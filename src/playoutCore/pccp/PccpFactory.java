@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
+import playoutCore.pccp.commands.PccpAPND;
 import playoutCore.pccp.commands.PccpCLEARALL;
 import playoutCore.pccp.commands.PccpGETPL;
 import playoutCore.pccp.commands.PccpPLAYNOW;
@@ -43,6 +44,7 @@ public class PccpFactory {
         PLSCHED,    // Schedules a given playlist. PLSCHED <playlist id> <timestamp>
         GETPL,      // Returns the playlist loaded in melted plus the clips that will be added to melted in schedule
         GETTIMERS,  // Returns a JSON with the 3 timers (uptime, clip time, playlist remaining time)
+        APND,       // Appends a clip to the playout's playlist
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id
@@ -81,6 +83,9 @@ public class PccpFactory {
                         break;
                     case GETPL:
                         cmd = new PccpGETPL(publisher, pcrChannel);
+                        break;
+                    case APND:
+                        cmd = new PccpAPND(args, publisher, fscpChannel, scheduler, logger);
                         break;
                     case GETTIMERS:
                         System.out.println("GETTIMERS NOT IMPLEMENTED YET!!!");
