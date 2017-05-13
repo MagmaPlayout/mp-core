@@ -46,7 +46,11 @@ public abstract class PccpCommand {
 
         String path = args.getAsJsonPrimitive(PATH_KEY).toString();
         Duration duration = Duration.parse(args.getAsJsonPrimitive(DURATION_KEY).toString().replace("\"", ""));
-        int filterId = args.getAsJsonPrimitive(FILTER_ID_KEY).getAsInt();
+        
+        int filterId = Clip.NO_FILTER;
+        if(args.getAsJsonPrimitive(FILTER_ID_KEY) != null){
+            filterId = args.getAsJsonPrimitive(FILTER_ID_KEY).getAsInt();
+        }
         int frameLen = args.getAsJsonPrimitive(FRAME_LEN_KEY).getAsInt();
         int fps = args.getAsJsonPrimitive(FPS_KEY).getAsInt();
 

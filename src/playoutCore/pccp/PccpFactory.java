@@ -114,7 +114,8 @@ public class PccpFactory {
             args = null; // GETPL needs no args
         }
         else try {
-            args = new JsonParser().parse(explodedCmd[1]).getAsJsonObject();
+            String argString = commandString.substring(opcode.length()); // Removes opcode from commandString
+            args = new JsonParser().parse(argString).getAsJsonObject();
         }catch(IllegalStateException e){ // args is not a json object
             return null;
         }
