@@ -15,6 +15,8 @@ import us.monoid.web.Resty;
  * 
  * @author rombus
  */
+// Unused? check in the future...
+@Deprecated
 public class RestStore implements DataStore {
     private static final String CLIPS_KEY = "clips";    // Json KEY that stores the list of clips
     private static final String PATH_KEY = "path";      // Json KEY that stores the path of the current clip
@@ -107,14 +109,14 @@ public class RestStore implements DataStore {
 
 
             if(!hasFilter){
-                result = new Clip(path, duration);
+//                result = new Clip(path, duration);
             }
             else {
                 int frameLen = Integer.parseInt((String)jsonRes.get("frameLen"));
                 int fps  = Integer.parseInt((String)jsonRes.get("fps"));
                 int filterId  = Integer.parseInt((String)jsonRes.get("filterId"));
 
-                result = new Clip(path, duration, frameLen, fps, filterId);
+//                result = new Clip(path, duration, frameLen, fps, filterId);
             }
         } catch (IOException ex) {
 

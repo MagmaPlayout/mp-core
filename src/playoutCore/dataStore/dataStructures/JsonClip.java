@@ -12,4 +12,5 @@ public class JsonClip {
     public static final String FILTER_ID_KEY = "filterId";
     public static final String FRAME_LEN_KEY = "frameCount";
     public static final String FPS_KEY = "frameRate";
+    public static final String PLAYLIST_IDX_KEY = "currentPos";
 }

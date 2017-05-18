@@ -9,6 +9,7 @@ import static playoutCore.dataStore.dataStructures.JsonClip.FILTER_ID_KEY;
 import static playoutCore.dataStore.dataStructures.JsonClip.FPS_KEY;
 import static playoutCore.dataStore.dataStructures.JsonClip.FRAME_LEN_KEY;
 import static playoutCore.dataStore.dataStructures.JsonClip.PATH_KEY;
+import static playoutCore.dataStore.dataStructures.JsonClip.PLAYLIST_IDX_KEY;
 import playoutCore.mvcp.MvcpCmdFactory;
 
 /**
@@ -53,7 +54,8 @@ public abstract class PccpCommand {
         }
         int frameLen = args.getAsJsonPrimitive(FRAME_LEN_KEY).getAsInt();
         int fps = args.getAsJsonPrimitive(FPS_KEY).getAsInt();
+        int plIdx = args.getAsJsonPrimitive(PLAYLIST_IDX_KEY).getAsInt();
 
-        return new Clip(path, duration, frameLen, fps, filterId);
+        return new Clip(path, duration, frameLen, fps, filterId, plIdx);
     }
 }

@@ -17,6 +17,7 @@ import redis.clients.jedis.Jedis;
  * 
  * @author rombus
  */
+@Deprecated // Store was moved to Mysql and through a Rest API
 public class RedisStore implements DataStore {
     private static final String CLIPS_KEY = "clips";    // Json KEY that stores the list of clips
     private static final String PATH_KEY = "path";      // Json KEY that stores the path of the current clip
@@ -56,10 +57,10 @@ public class RedisStore implements DataStore {
                 int fps = curObj.getAsJsonPrimitive(FPS_KEY).getAsInt();
 
                 if(filterId.isEmpty()){
-                    pathList.add(new Clip(path, duration));
+//                    pathList.add(new Clip(path, duration));
                 }
                 else {
-                    pathList.add(new Clip(path, duration, frameLen, fps, Integer.parseInt(filterId)));
+//                    pathList.add(new Clip(path, duration, frameLen, fps, Integer.parseInt(filterId)));
                 }
             }
         }
