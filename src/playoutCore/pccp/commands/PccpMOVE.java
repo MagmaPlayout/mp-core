@@ -52,6 +52,8 @@ public class PccpMOVE extends PccpCommand {
         try {
             if(newPos < oldPos) {
                 oldPos += 1; // The list will move 1 up, as I will insert a new clip in newPos
+            } else {
+                newPos +=1;
             }
 
             GenericResponse r;
@@ -74,6 +76,7 @@ public class PccpMOVE extends PccpCommand {
             if(clip.filterId != Clip.NO_FILTER){
                 // TODO: implement filters
             }
+            logger.log(Level.INFO, "Playout Core - Moved clip {0} to index {1}. ", new Object[]{clip.path, newPos});
         } catch (MeltedCommandException ex) {
             logger.log(Level.SEVERE, "Playout Core - An error occured during the execution of the MOVE PCCP command. Possibly by a misconfigured melt path configuration");
             return false;

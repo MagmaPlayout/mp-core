@@ -7,9 +7,11 @@ import org.quartz.Scheduler;
 import playoutCore.pccp.commands.PccpAPND;
 import playoutCore.pccp.commands.PccpCLEARALL;
 import playoutCore.pccp.commands.PccpGETPL;
+import playoutCore.pccp.commands.PccpMOVE;
 import playoutCore.pccp.commands.PccpPLAYNOW;
 import playoutCore.pccp.commands.PccpPLPLAYNOW;
 import playoutCore.pccp.commands.PccpPLSCHED;
+import playoutCore.pccp.commands.PccpREMOVE;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -45,6 +47,8 @@ public class PccpFactory {
         GETPL,      // Returns the playlist loaded in melted plus the clips that will be added to melted in schedule
         GETTIMERS,  // Returns a JSON with the 3 timers (uptime, clip time, playlist remaining time)
         APND,       // Appends a clip to the playout's playlist
+        REMOVE,     // Removes a given playlist index
+        MOVE,       // Moves a media from 1 playlist index to another
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id
@@ -89,6 +93,12 @@ public class PccpFactory {
                         break;
                     case GETTIMERS:
                         System.out.println("GETTIMERS NOT IMPLEMENTED YET!!!");
+                        break;
+                    case REMOVE:
+                        cmd = new PccpREMOVE(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case MOVE:
+                        cmd = new PccpMOVE(args, publisher, fscpChannel, scheduler, logger);
                         break;
                 }
 
