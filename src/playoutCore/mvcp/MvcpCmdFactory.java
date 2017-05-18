@@ -94,11 +94,19 @@ public class MvcpCmdFactory {
         return factory.getNewRemoveCmd(unit);
     }
 
+    public MeltedCmd getRemove(String unit, int playlistIndex){
+        return factory.getNewRemoveCmd(unit, playlistIndex);
+    }
+
     public MeltedCmd getClean(String unit){
         return factory.getNewCleanCmd(unit);
     }
 
     public MeltedCmd getWipe(String unit){
         return factory.getNewWipeCmd(unit);
+    }
+
+    public MeltedCmd getInsert(String unit, String path, int playlistIndex){
+        return factory.getNewInsertCmd(unit, path, playlistIndex);
     }
 }

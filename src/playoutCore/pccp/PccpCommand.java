@@ -39,10 +39,10 @@ public abstract class PccpCommand {
      * Receives a JsonObject that needs to have a single Clip representation.
      * For parsing multiple clips call this function inside a loop.
      *
-     * @param jsonClip
+     * @param args jsonObject to parse as a clip
      * @return 
      */
-    protected Clip getClipFromJsonArg(JsonObject jsonClip){
+    protected Clip getClipFromJsonArg(JsonObject args){
         //TODO: handle exceptions of malformed jsonClip
 
         String path = args.getAsJsonPrimitive(PATH_KEY).toString();
