@@ -44,7 +44,6 @@ public abstract class PccpCommand {
      */
     protected Clip getClipFromJsonArg(JsonObject args){
         //TODO: handle exceptions of malformed jsonClip
-
         String path = args.getAsJsonPrimitive(PATH_KEY).toString();
         Duration duration = Duration.parse(args.getAsJsonPrimitive(DURATION_KEY).toString().replace("\"", ""));
         
@@ -54,7 +53,8 @@ public abstract class PccpCommand {
         }
         int frameLen = args.getAsJsonPrimitive(FRAME_LEN_KEY).getAsInt();
         int fps = args.getAsJsonPrimitive(FPS_KEY).getAsInt();
-        int plIdx = args.getAsJsonPrimitive(PLAYLIST_IDX_KEY).getAsInt();
+
+        int plIdx = this.args.getAsJsonPrimitive(PLAYLIST_IDX_KEY).getAsInt();
 
         return new Clip(path, duration, frameLen, fps, filterId, plIdx);
     }
