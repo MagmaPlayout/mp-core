@@ -7,6 +7,7 @@ import org.quartz.Scheduler;
 import playoutCore.pccp.commands.PccpAPND;
 import playoutCore.pccp.commands.PccpCLEARALL;
 import playoutCore.pccp.commands.PccpGETPL;
+import playoutCore.pccp.commands.PccpGOTO;
 import playoutCore.pccp.commands.PccpMOVE;
 import playoutCore.pccp.commands.PccpPLAYNOW;
 import playoutCore.pccp.commands.PccpPLPLAYNOW;
@@ -49,6 +50,7 @@ public class PccpFactory {
         APND,       // Appends a clip to the playout's playlist
         REMOVE,     // Removes a given playlist index
         MOVE,       // Moves a media from 1 playlist index to another
+        GOTO,       // Moves the playing cursor to the specified index
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id
@@ -99,6 +101,9 @@ public class PccpFactory {
                         break;
                     case MOVE:
                         cmd = new PccpMOVE(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case GOTO:
+                        cmd = new PccpGOTO(args, publisher, fscpChannel, scheduler, logger);
                         break;
                 }
 
