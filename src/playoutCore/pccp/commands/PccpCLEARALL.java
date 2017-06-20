@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import meltedBackend.common.MeltedCommandException;
-import playoutCore.dataStore.DataStore;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 
@@ -16,7 +15,7 @@ import playoutCore.pccp.PccpCommand;
 public class PccpCLEARALL extends PccpCommand {
     
     @Override
-    public boolean execute(MvcpCmdFactory factory, DataStore store) {
+    public boolean execute(MvcpCmdFactory factory) {
         //TODO hardcoded unit
         String unit = "U0";
 
@@ -35,7 +34,7 @@ public class PccpCLEARALL extends PccpCommand {
     }
 
     @Override
-    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory, DataStore store) {
+    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory) {
         throw new UnsupportedOperationException("This command does not implement the executeForResponse method.");
     }
 }

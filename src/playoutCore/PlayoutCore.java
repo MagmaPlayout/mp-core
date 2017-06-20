@@ -7,8 +7,6 @@ import meltedBackend.telnetClient.MeltedTelnetClient;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
-import playoutCore.dataStore.DataStore;
-import playoutCore.dataStore.RestStore;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.producerConsumer.CommandsExecutor;
@@ -55,13 +53,6 @@ public class PlayoutCore {
             System.exit(1);
         }
         
-        
-        /**
-         * Connect to the DataStore server.
-         */
-        logger.log(Level.INFO, "Playout Core - Attempt to connect to the store server...");
-        DataStore store = new RestStore(cfg.getRestBaseUrl(), logger);
-        
 
         /**
          * Creates a meltedTelnetClient instance, exits if it can't establish a connection.
@@ -83,9 +74,8 @@ public class PlayoutCore {
          * Start's the command executor thread.
          */
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsExecutor thread...");
-        MvcpCmdFactory factory = new MvcpCmdFactory(melted, store, logger);
-        CommandsExecutor executor = new CommandsExecutor(factory, store,
-                redisPublisher, cfg.getRedisFscpChannel(), commandsQueue, logger);
+        MvcpCmdFactory factory = new MvcpCmdFactory(melted, logger);
+        CommandsExecutor executor = new CommandsExecutor(factory, redisPublisher, cfg.getRedisFscpChannel(), commandsQueue, logger);
         
         Thread executorThread = new Thread(executor);
         executorThread.start(); // TODO: handle reconnection

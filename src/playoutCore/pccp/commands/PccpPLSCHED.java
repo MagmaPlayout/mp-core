@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
-import playoutCore.dataStore.DataStore;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 
@@ -12,6 +11,7 @@ import playoutCore.pccp.PccpCommand;
  *
  * @author rombus
  */
+@Deprecated
 public class PccpPLSCHED extends PccpCommand {
     private static final int ID = 0;
     private static final int TIME = 1;
@@ -25,7 +25,7 @@ public class PccpPLSCHED extends PccpCommand {
     }
 
     @Override
-    public boolean execute(MvcpCmdFactory factory, DataStore store) {
+    public boolean execute(MvcpCmdFactory factory) {
         logger.log(Level.SEVERE, "Playout Core - PLSCHED command not implemented yet!");
         
         return false;
@@ -114,7 +114,7 @@ public class PccpPLSCHED extends PccpCommand {
     }
 
     @Override
-    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory, DataStore store) {
+    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory) {
         throw new UnsupportedOperationException("This command does not implement the executeForResponse method.");
     }
 }

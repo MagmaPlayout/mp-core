@@ -12,7 +12,6 @@ import meltedBackend.commands.MeltedCmdFactory;
 import meltedBackend.common.MeltedClient;
 import meltedBackend.common.MeltedCommandException;
 import playoutCore.ConfigurationManager;
-import playoutCore.dataStore.DataStore;
 import playoutCore.dataStore.dataStructures.Clip;
 
 /**
@@ -22,14 +21,12 @@ import playoutCore.dataStore.dataStructures.Clip;
  */
 public class MvcpCmdFactory {
     private final MeltedCmdFactory factory;
-    private final DataStore store;
     private final Logger logger;
     private final String melt, url;
     private final int bashTimeout;
 
-    public MvcpCmdFactory(MeltedClient melted, DataStore store, Logger logger){
+    public MvcpCmdFactory(MeltedClient melted, Logger logger){
         factory = new MeltedCmdFactory(melted);
-        this.store = store;
         this.logger = logger;
 
         ConfigurationManager cfg = ConfigurationManager.getInstance();

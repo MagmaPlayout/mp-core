@@ -7,7 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import meltedBackend.common.MeltedCommandException;
 import meltedBackend.responseParser.responses.ListResponse;
-import playoutCore.dataStore.DataStore;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import redis.clients.jedis.Jedis;
@@ -28,12 +27,12 @@ public class PccpGETPL extends PccpCommand {
     }
 
     @Override
-    public boolean execute(MvcpCmdFactory factory, DataStore store) {
+    public boolean execute(MvcpCmdFactory factory) {
         throw new UnsupportedOperationException("This command does not implement the execute method.");
     }
 
     @Override
-    public JsonObject executeForResponse(MvcpCmdFactory factory, DataStore store) {
+    public JsonObject executeForResponse(MvcpCmdFactory factory) {
         JsonObject result = new JsonObject();
         String unit = "U0"; //TODO: hxc unit
 

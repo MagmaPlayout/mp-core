@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
-import playoutCore.dataStore.DataStore;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import redis.clients.jedis.Jedis;
@@ -14,6 +13,7 @@ import redis.clients.jedis.Jedis;
  * 
  * @author rombus
  */
+@Deprecated
 public class PccpPLPLAYNOW extends PccpCommand {
     private static final int ID = 0;
     private final Logger logger;
@@ -30,7 +30,7 @@ public class PccpPLPLAYNOW extends PccpCommand {
     }
 
     @Override
-    public boolean execute(MvcpCmdFactory factory, DataStore store) {
+    public boolean execute(MvcpCmdFactory factory) {
         logger.log(Level.SEVERE, "Playout Core - PLPLAYNOW command not implemented yet!");
         return false;
         // TODO: call getClipFromJsonArg(xx) inside a loop 
@@ -106,7 +106,7 @@ public class PccpPLPLAYNOW extends PccpCommand {
     }
 
     @Override
-    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory, DataStore store) {
+    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory) {
         throw new UnsupportedOperationException("This command does not implement the executeForResponse method.");
     }
 }

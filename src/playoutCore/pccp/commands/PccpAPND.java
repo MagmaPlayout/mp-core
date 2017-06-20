@@ -8,9 +8,8 @@ import meltedBackend.common.MeltedCommandException;
 import meltedBackend.responseParser.responses.GenericResponse;
 import meltedBackend.responseParser.responses.ListResponse;
 import org.quartz.Scheduler;
-import playoutCore.dataStore.DataStore;
 import playoutCore.dataStore.dataStructures.Clip;
-import static playoutCore.dataStore.dataStructures.JsonClip.MEDIA_KEY;
+import static playoutCore.dataStore.dataStructures.JsonClip.PIECE_KEY;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import redis.clients.jedis.Jedis;
@@ -35,14 +34,14 @@ public class PccpAPND extends PccpCommand {
     }
 
     @Override
-    public boolean execute(MvcpCmdFactory factory, DataStore store) {
+    public boolean execute(MvcpCmdFactory factory) {
         //TODO: validate args lenght, only accepts one clip, that is only one json object.
         if(args == null){
             logger.log(Level.SEVERE, "Playout Core - No arguments found for APND PCCP command.");
             return false;
         }
 
-        Clip clip = getClipFromJsonArg(args.getAsJsonObject(MEDIA_KEY));
+        Clip clip = getClipFromJsonArg(args.getAsJsonObject(PIECE_KEY));
 
         //TODO hardcoded unit
         String unit = "U0";
@@ -83,7 +82,7 @@ public class PccpAPND extends PccpCommand {
     }
 
     @Override
-    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory, DataStore store) {
+    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory) {
         throw new UnsupportedOperationException("This command does not implement the executeForResponse method.");
     }
 }

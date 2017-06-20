@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import playoutCore.dataStore.DataStore;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.pccp.commands.PccpGETPL;
@@ -17,15 +16,13 @@ import redis.clients.jedis.Jedis;
  */
 public class CommandsExecutor implements Runnable {
     private final MvcpCmdFactory meltedCmdFactory;
-    private final DataStore store;
     private final ArrayBlockingQueue<PccpCommand> commandQueue;
     private final Logger logger;
     private boolean keepRunning;
 
-    public CommandsExecutor(MvcpCmdFactory factory, DataStore store, Jedis publisher,
-            String fscpChannel, ArrayBlockingQueue<PccpCommand> commandQueue, Logger logger){
+    public CommandsExecutor(MvcpCmdFactory factory, Jedis publisher, String fscpChannel,
+            ArrayBlockingQueue<PccpCommand> commandQueue, Logger logger){
         this.meltedCmdFactory = factory;
-        this.store = store;
         this.commandQueue = commandQueue;
         this.logger = logger;
         this.keepRunning = true;
@@ -38,11 +35,11 @@ public class CommandsExecutor implements Runnable {
                 PccpCommand cmd = commandQueue.take();  // blocking
                 
                 if(cmd instanceof PccpGETPL){
-                    JsonObject response = cmd.executeForResponse(meltedCmdFactory, store);
+                    JsonObject response = cmd.executeForResponse(meltedCmdFactory);
                     //TODO mandarle al frontend la response
                 }
                 else {
-                    cmd.execute(meltedCmdFactory, store);
+                    cmd.execute(meltedCmdFactory);
                 }
             } catch (InterruptedException e) {
                 keepRunning = false;
