@@ -12,7 +12,8 @@ import java.util.logging.Logger;
 /**
  * This class manages the user defined configurations.
  * The configuration file is expected to be in ~/.magma-playout.conf
- *
+ * (It's used by mp-melted-status project as well. TODO: put this class inside it's own jar)
+ * 
  * @author rombus
  */
 public class ConfigurationManager {

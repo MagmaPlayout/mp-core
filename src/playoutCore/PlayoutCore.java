@@ -44,7 +44,7 @@ public class PlayoutCore {
         Jedis redisPublisher = new Jedis(cfg.getRedisHost(), cfg.getRedisPort(), cfg.getRedisReconnectionTimeout());
         try {
             while(!connectToRedisPubSub(logger, cfg, redisPCCPSubscriber, redisPublisher)){
-                logger.log(Level.SEVERE, "Playout Core - FATAL ERROR: Could not connect to the Redis server. Is it running?\nExiting...");
+                logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Redis server. Is it running?\nExiting...");
                 Thread.sleep(5000);
             }
         } catch (InterruptedException ex) {
@@ -58,7 +58,7 @@ public class PlayoutCore {
         logger.log(Level.INFO, "Playout Core - Attempt to connect to Melted server...");
         MeltedTelnetClient melted = new MeltedTelnetClient();
         if(!connectToMelted(logger, cfg, melted)){ //handles retries by its own
-            logger.log(Level.SEVERE, "Playout Core - FATAL ERROR: Could not connect to the Melted server. Retries exhausted. \nExiting...");
+            logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Melted server. Retries exhausted. \nExiting...");
         }
         
         /**
@@ -117,7 +117,7 @@ public class PlayoutCore {
             redisPublisher.connect();
         }
         catch(JedisConnectionException e){
-            logger.log(Level.SEVERE, "Playout Core - FATAL ERROR: Could not connect to the Redis server. Is it running?\nExiting...");
+            logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Redis server. Is it running?\nExiting...");
             return false;
         }
         
@@ -133,7 +133,7 @@ public class PlayoutCore {
             connected = melted.reconnect(cfg.getMeltedReconnectionTries(), cfg.getMeltedReconnectionTimeout());
         }
         if(!connected){
-            logger.log(Level.SEVERE, "Playout Core: Could not connect to the Melted server. Is it running?");
+            logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Melted server. Is it running?");
             return false;
         }
         
