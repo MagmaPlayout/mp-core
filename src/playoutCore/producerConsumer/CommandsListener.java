@@ -19,13 +19,13 @@ public class CommandsListener implements Runnable{
     private final Logger logger;
     private final Jedis jedis;
     private final String pccpChannel;
-    private final PccpFactory pccp;
+    private final PccpFactory pccpFactory;
     private final ArrayBlockingQueue<PccpCommand> cmdQueue;
 
     public CommandsListener(Jedis subscriber, Jedis publisher, String pccpChannel,
             String fscpChannel, String pcrChannel, Scheduler scheduler, ArrayBlockingQueue cmdQueue, Logger logger){
         jedis = subscriber;
-        pccp = new PccpFactory(publisher, fscpChannel, pcrChannel, scheduler, logger);
+        pccpFactory = new PccpFactory(publisher, fscpChannel, pcrChannel, scheduler, logger);
         this.logger = logger;
         this.pccpChannel = pccpChannel;
         this.cmdQueue = cmdQueue;
@@ -36,7 +36,7 @@ public class CommandsListener implements Runnable{
         jedis.subscribe(new JedisPubSub() {
             @Override
             public void onMessage(String channel, String cmd) {
-                PccpCommand pccpCmd = pccp.getCommand(cmd);
+                PccpCommand pccpCmd = pccpFactory.getCommand(cmd);
                 
                 if(pccpCmd != null){
                     cmdQueue.add(pccpCmd);

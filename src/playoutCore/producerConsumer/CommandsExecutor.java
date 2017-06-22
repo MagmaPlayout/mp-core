@@ -19,13 +19,17 @@ public class CommandsExecutor implements Runnable {
     private final ArrayBlockingQueue<PccpCommand> commandQueue;
     private final Logger logger;
     private boolean keepRunning;
+    private Jedis publisher;
+    private String pcrChannel;
 
-    public CommandsExecutor(MvcpCmdFactory factory, Jedis publisher, String fscpChannel,
+    public CommandsExecutor(MvcpCmdFactory factory, Jedis publisher, String pcrChannel,
             ArrayBlockingQueue<PccpCommand> commandQueue, Logger logger){
         this.meltedCmdFactory = factory;
         this.commandQueue = commandQueue;
         this.logger = logger;
         this.keepRunning = true;
+        this.publisher = publisher;
+        this.pcrChannel = pcrChannel;
     }
     
     @Override
@@ -36,7 +40,7 @@ public class CommandsExecutor implements Runnable {
                 
                 if(cmd instanceof PccpGETPL){
                     JsonObject response = cmd.executeForResponse(meltedCmdFactory);
-                    //TODO mandarle al frontend la response
+                    publisher.publish(pcrChannel, response.toString());
                 }
                 else {
                     cmd.execute(meltedCmdFactory);

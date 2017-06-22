@@ -88,7 +88,7 @@ public class PccpFactory {
                         cmd = new PccpCLEARALL();
                         break;
                     case GETPL:
-                        cmd = new PccpGETPL(publisher, pcrChannel);
+                        cmd = new PccpGETPL();
                         break;
                     case APND:
                         cmd = new PccpAPND(args, publisher, fscpChannel, scheduler, logger);

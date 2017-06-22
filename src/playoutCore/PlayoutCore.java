@@ -40,16 +40,14 @@ public class PlayoutCore {
         /**
          * Connect to Redis PubSub server.
          */
-        logger.log(Level.INFO, "Playout Core - Attempt to connect to Redis Pub/Sub server...");
         Jedis redisPCCPSubscriber = new Jedis(cfg.getRedisHost(), cfg.getRedisPort(), cfg.getRedisReconnectionTimeout());
         Jedis redisPublisher = new Jedis(cfg.getRedisHost(), cfg.getRedisPort(), cfg.getRedisReconnectionTimeout());
-        try{
-            redisPCCPSubscriber.connect();
-            redisPublisher.connect();
-        }
-        catch(JedisConnectionException e){
-            //TODO handle reconnections
-            logger.log(Level.SEVERE, "Playout Core - FATAL ERROR: Could not connect to the Redis server. Is it running?\nExiting...");
+        try {
+            while(!connectToRedisPubSub(logger, cfg, redisPCCPSubscriber, redisPublisher)){
+                logger.log(Level.SEVERE, "Playout Core - FATAL ERROR: Could not connect to the Redis server. Is it running?\nExiting...");
+                Thread.sleep(5000);
+            }
+        } catch (InterruptedException ex) {
             System.exit(1);
         }
         
@@ -59,23 +57,16 @@ public class PlayoutCore {
          */
         logger.log(Level.INFO, "Playout Core - Attempt to connect to Melted server...");
         MeltedTelnetClient melted = new MeltedTelnetClient();
-        boolean connected = melted.connect(cfg.getMeltedHost(), cfg.getMeltedPort(), logger);
-        // Handling reconnections
-        while(!connected){
-            connected = melted.reconnect(cfg.getMeltedReconnectionTries(), cfg.getMeltedReconnectionTimeout());
+        if(!connectToMelted(logger, cfg, melted)){ //handles retries by its own
+            logger.log(Level.SEVERE, "Playout Core - FATAL ERROR: Could not connect to the Melted server. Retries exhausted. \nExiting...");
         }
-        if(!connected){
-            logger.log(Level.SEVERE, "Playout Core - FATAL ERROR: Could not connect to the Melted server. Is it running?\nExiting...");
-            System.exit(1);
-        }
-
         
         /**
          * Start's the command executor thread.
          */
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsExecutor thread...");
         MvcpCmdFactory factory = new MvcpCmdFactory(melted, logger);
-        CommandsExecutor executor = new CommandsExecutor(factory, redisPublisher, cfg.getRedisFscpChannel(), commandsQueue, logger);
+        CommandsExecutor executor = new CommandsExecutor(factory, redisPublisher, cfg.getRedisPcrChannel(), commandsQueue, logger);
         
         Thread executorThread = new Thread(executor);
         executorThread.start(); // TODO: handle reconnection
@@ -84,6 +75,7 @@ public class PlayoutCore {
         /**
          * Start's the command listener thread.
          */
+        // TODO: delete scheduler if it's not used
         Scheduler scheduler = null;
         try {
             scheduler = new StdSchedulerFactory().getScheduler();
@@ -108,5 +100,43 @@ public class PlayoutCore {
         }
 
         logger.log(Level.INFO, "Playout Core - Ready...\n\n");
+    }
+        
+    /**
+     * Connect to Redis PubSub server.
+     * @param logger
+     * @param cfg
+     * @param redisPCCPSubscriber
+     * @param redisPublisher
+     * @return status of connection.
+     */
+    public boolean connectToRedisPubSub(Logger logger, ConfigurationManager cfg, Jedis redisPCCPSubscriber, Jedis redisPublisher){
+        logger.log(Level.INFO, "Playout Core - Attempt to connect to Redis Pub/Sub server...");
+        try{
+            redisPCCPSubscriber.connect();
+            redisPublisher.connect();
+        }
+        catch(JedisConnectionException e){
+            logger.log(Level.SEVERE, "Playout Core - FATAL ERROR: Could not connect to the Redis server. Is it running?\nExiting...");
+            return false;
+        }
+        
+        return true;
+    }
+    
+    public boolean connectToMelted(Logger logger, ConfigurationManager cfg, MeltedTelnetClient melted){
+        //TODO: check if melted is running first, if it's not then run it
+        
+        boolean connected = melted.connect(cfg.getMeltedHost(), cfg.getMeltedPort(), logger);
+        while(!connected){
+            // Handling reconnections
+            connected = melted.reconnect(cfg.getMeltedReconnectionTries(), cfg.getMeltedReconnectionTimeout());
+        }
+        if(!connected){
+            logger.log(Level.SEVERE, "Playout Core: Could not connect to the Melted server. Is it running?");
+            return false;
+        }
+        
+        return true;
     }
 }

@@ -18,13 +18,6 @@ import redis.clients.jedis.Jedis;
  * @author rombus
  */
 public class PccpGETPL extends PccpCommand {
-    private Jedis publisher;
-    private String pcrChannel;
-
-    public PccpGETPL(Jedis publisher, String pcrChannel){
-        this.publisher = publisher;
-        this.pcrChannel = pcrChannel;
-    }
 
     @Override
     public boolean execute(MvcpCmdFactory factory) {
@@ -45,7 +38,6 @@ public class PccpGETPL extends PccpCommand {
             result.add("opcode", new JsonPrimitive("GETPL"));
             result.add("result", new JsonPrimitive(gson.toJson(clipsPaths)));
             
-            publisher.publish(pcrChannel, result.toString());
             //logger.log(Level.INFO, "A response was send to the PCR channel");
         } catch (MeltedCommandException ex) {
             Logger.getLogger(PccpGETPL.class.getName()).log(Level.SEVERE, null, ex);
