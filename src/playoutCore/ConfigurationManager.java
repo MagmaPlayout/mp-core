@@ -174,4 +174,25 @@ public class ConfigurationManager {
     public String getRestBaseUrl(){
         return properties.getProperty(REST_BASE_URL);
     }
+
+    public void printConfig(Logger logger){
+        logger.log(Level.INFO, "Loaded configuration: -------------------------------------");
+        logger.log(Level.INFO, "CONFIG_PATH: {0}", ConfigurationManager.CONFIG_PATH);
+        logger.log(Level.INFO, "REDIS_HOST_KEY: {0}", properties.getProperty(REDIS_HOST_KEY));
+        logger.log(Level.INFO, "REDIS_PORT_KEY: {0}", properties.getProperty(REDIS_PORT_KEY));
+        logger.log(Level.INFO, "REDIS_PCCP_CHANNEL_KEY: {0}", properties.getProperty(REDIS_PCCP_CHANNEL_KEY));
+        logger.log(Level.INFO, "REDIS_FSCP_CHANNEL_KEY: {0}", properties.getProperty(REDIS_FSCP_CHANNEL_KEY));
+        logger.log(Level.INFO, "REDIS_PCR_CHANNEL_KEY: {0}", properties.getProperty(REDIS_PCR_CHANNEL_KEY));
+        logger.log(Level.INFO, "REDIS_MSTA_CHANNEL_KEY: {0}", properties.getProperty(REDIS_MSTA_CHANNEL_KEY));
+        logger.log(Level.INFO, "REDIS_RECONNECTION_TIMEOUT_KEY: {0}", properties.getProperty(REDIS_RECONNECTION_TIMEOUT_KEY));
+        logger.log(Level.INFO, "MELTED_HOST_KEY: {0}", properties.getProperty(MELTED_HOST_KEY));
+        logger.log(Level.INFO, "MELTED_PORT_KEY: {0}", properties.getProperty(MELTED_PORT_KEY));
+        logger.log(Level.INFO, "MELTED_RECONNECTION_TIMEOUT_KEY: {0}", properties.getProperty(MELTED_RECONNECTION_TIMEOUT_KEY));
+        logger.log(Level.INFO, "MELTED_RECONNECTION_TRIES_KEY: {0}", properties.getProperty(MELTED_RECONNECTION_TRIES_KEY));
+        logger.log(Level.INFO, "MELT_PATH_KEY: {0}", properties.getProperty(MELT_PATH_KEY));
+        logger.log(Level.INFO, "FILTER_SERVER_URL_KEY: {0}", properties.getProperty(FILTER_SERVER_URL_KEY));
+        logger.log(Level.INFO, "BASH_TIMEOUT_KEY: {0}", properties.getProperty(BASH_TIMEOUT_KEY));
+        logger.log(Level.INFO, "REST_BASE_URL: {0}", properties.getProperty(REST_BASE_URL));
+        logger.log(Level.INFO, "-----------------------------------------------------------");
+    }
 }
