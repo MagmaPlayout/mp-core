@@ -3,6 +3,7 @@ package playoutCore;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import libconfig.ConfigurationManager;
 import meltedBackend.telnetClient.MeltedTelnetClient;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -44,7 +45,7 @@ public class PlayoutCore {
         Jedis redisPublisher = new Jedis(cfg.getRedisHost(), cfg.getRedisPort(), cfg.getRedisReconnectionTimeout());
         try {
             while(!connectToRedisPubSub(logger, cfg, redisPCCPSubscriber, redisPublisher)){
-                logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Redis server. Is it running?\nExiting...");
+                logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Redis server. Is it running?\n");
                 Thread.sleep(5000);
             }
         } catch (InterruptedException ex) {
@@ -58,7 +59,7 @@ public class PlayoutCore {
         logger.log(Level.INFO, "Playout Core - Attempt to connect to Melted server...");
         MeltedTelnetClient melted = new MeltedTelnetClient();
         if(!connectToMelted(logger, cfg, melted)){ //handles retries by its own
-            logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Melted server. Retries exhausted. \nExiting...");
+            logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Melted server. Retries exhausted. \n");
         }
         
         /**
@@ -117,7 +118,7 @@ public class PlayoutCore {
             redisPublisher.connect();
         }
         catch(JedisConnectionException e){
-            logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Redis server. Is it running?\nExiting...");
+            logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Redis server. Is it running?\n");
             return false;
         }
         
