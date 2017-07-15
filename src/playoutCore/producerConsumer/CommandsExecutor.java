@@ -27,7 +27,7 @@ public class CommandsExecutor implements Runnable {
     private final MeltedProxy meltedProxy;
 
     public CommandsExecutor(MvcpCmdFactory factory, Jedis publisher, String pcrChannel,
-            ArrayBlockingQueue<PccpCommand> commandQueue, int meltedPlaylistMaxDuration, Logger logger){
+            ArrayBlockingQueue<PccpCommand> commandQueue, int meltedPlaylistMaxDuration, int appenderWorkerFrq, Logger logger){
         this.meltedCmdFactory = factory;
         this.commandQueue = commandQueue;
         this.logger = logger;
@@ -35,7 +35,7 @@ public class CommandsExecutor implements Runnable {
         this.publisher = publisher;
         this.pcrChannel = pcrChannel; // Responses channel
         
-        meltedProxy = new MeltedProxy(meltedPlaylistMaxDuration, logger);
+        meltedProxy = new MeltedProxy(meltedPlaylistMaxDuration, factory, appenderWorkerFrq, logger);
     }
     
     @Override
@@ -45,12 +45,14 @@ public class CommandsExecutor implements Runnable {
                 PccpCommand cmd = commandQueue.take();  // blocking
 
                 if(cmd instanceof PccpAPND){
-                    // PccpAPND commands are the only PCCP commands that add medias to melted
-                    // in the future, any other command added that adds medias to melted
+                    // PccpAPND commands are the only PCCP commands that add medias to melted.
+                    // In the future, any other command added that adds medias to melted
                     // should be taken into account here.
-                    meltedProxy.execute(cmd, meltedCmdFactory);
+                    // MeltedProxy makes sure that melted's playlist doesn't get overloaded
+                    meltedProxy.execute((PccpAPND)cmd);
                 }
                 else {
+                    System.out.println("commandsexecutor detectó un NOOOO PccpAPND, osea otro cmd");
                     if(cmd instanceof PccpGETPL){ //TODO: make this distinction more abstract
                         JsonObject response = cmd.executeForResponse(meltedCmdFactory);
                         publisher.publish(pcrChannel, response.toString());

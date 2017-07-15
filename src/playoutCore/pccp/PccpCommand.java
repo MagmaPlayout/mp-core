@@ -8,6 +8,7 @@ import static playoutCore.dataStore.dataStructures.JsonClip.FILTER_ID_KEY;
 import static playoutCore.dataStore.dataStructures.JsonClip.FPS_KEY;
 import static playoutCore.dataStore.dataStructures.JsonClip.FRAME_LEN_KEY;
 import static playoutCore.dataStore.dataStructures.JsonClip.PATH_KEY;
+import static playoutCore.dataStore.dataStructures.JsonClip.PIECE_KEY;
 import static playoutCore.dataStore.dataStructures.JsonClip.PLAYLIST_IDX_KEY;
 import playoutCore.mvcp.MvcpCmdFactory;
 
@@ -43,8 +44,11 @@ public abstract class PccpCommand {
      */
     protected Clip getClipFromJsonArg(JsonObject args){
         //try {
-            String path = args.getAsJsonPrimitive(PATH_KEY).toString();
-            Duration duration = Duration.parse(args.getAsJsonPrimitive(DURATION_KEY).toString().replace("\"", ""));
+//            String path = args.getAsJsonPrimitive(PATH_KEY).toString();
+//            Duration duration = Duration.parse(args.getAsJsonPrimitive(DURATION_KEY).toString().replace("\"", ""));
+            JsonObject piece = args.getAsJsonObject(PIECE_KEY);
+            String path = piece.getAsJsonPrimitive(PATH_KEY).toString();
+            Duration duration = Duration.parse(piece.getAsJsonPrimitive(DURATION_KEY).toString().replace("\"", ""));
 
             int filterId = Clip.NO_FILTER;
             if(args.getAsJsonPrimitive(FILTER_ID_KEY) != null){
@@ -59,5 +63,9 @@ public abstract class PccpCommand {
         //} catch(NullPointerException e){
             //TODO: cachear la null pointer
         //}
+    }
+
+    public Duration getLength(){
+        return Duration.parse(args.getAsJsonObject(PIECE_KEY).getAsJsonPrimitive(DURATION_KEY).toString().replace("\"", ""));
     }
 }

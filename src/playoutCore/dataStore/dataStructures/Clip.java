@@ -14,7 +14,7 @@ public class Clip {
     public final Duration len;
     public final int frameLen;
     public final int fps;
-    public final int playlistIdx;
+    public final int playlistIdx; // @Deprecated????
 
     /**
      * Creates a Clip object with 0 frameLen, fps and no filter.

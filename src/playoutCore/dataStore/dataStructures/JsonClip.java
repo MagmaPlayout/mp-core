@@ -7,7 +7,7 @@ package playoutCore.dataStore.dataStructures;
  * @author rombus
  */
 public class JsonClip {
-    public static final String PIECE_KEY = "piece"; // TODO: para que quiero el piece y el path?? uso el piece y no el path, es así????
+    public static final String PIECE_KEY = "piece";
     public static final String PATH_KEY = "path";
     public static final String DURATION_KEY = "duration";
     public static final String FILTER_ID_KEY = "filterId";

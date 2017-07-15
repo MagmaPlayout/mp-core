@@ -66,7 +66,8 @@ public class PlayoutCore {
          */
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsExecutor thread...");
         MvcpCmdFactory factory = new MvcpCmdFactory(melted, logger);
-        CommandsExecutor executor = new CommandsExecutor(factory, redisPublisher, cfg.getRedisPcrChannel(), commandsQueue, cfg.getMeltedPlaylistMaxDuration(), logger);
+        CommandsExecutor executor = new CommandsExecutor(factory, redisPublisher, cfg.getRedisPcrChannel(),
+                commandsQueue, cfg.getMeltedPlaylistMaxDuration(), cfg.getMeltedAppenderWorkerFreq(), logger);
         
         Thread executorThread = new Thread(executor);
         executorThread.start(); // TODO: handle reconnection

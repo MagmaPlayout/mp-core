@@ -7,7 +7,6 @@ import meltedBackend.common.MeltedCommandException;
 import meltedBackend.responseParser.responses.GenericResponse;
 import org.quartz.Scheduler;
 import playoutCore.dataStore.dataStructures.Clip;
-import static playoutCore.dataStore.dataStructures.JsonClip.PIECE_KEY;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import redis.clients.jedis.Jedis;
@@ -33,7 +32,7 @@ public class PccpAPND extends PccpCommand {
             return false;
         }
 
-        Clip clip = getClipFromJsonArg(args.getAsJsonObject(PIECE_KEY));
+        Clip clip = getClipFromJsonArg(args);
 
         //TODO hardcoded unit
         String unit = "U0";
