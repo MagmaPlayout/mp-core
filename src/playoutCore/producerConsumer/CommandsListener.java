@@ -11,7 +11,7 @@ import redis.clients.jedis.JedisPubSub;
 
 /**
  * This class listens to the PCCP Redis channel for incomming commands and queues them for processing.
- * Runs in it's own thread.
+ * Runs on it's own thread.
  *
  * @author rombus
  */

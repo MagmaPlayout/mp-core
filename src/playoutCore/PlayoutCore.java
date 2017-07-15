@@ -17,13 +17,12 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
- *
+ * The core module for Magma Playout.
+ * This module is responsible for handling melted's playlist.
+ * 
  * @author rombus
  */
 public class PlayoutCore {
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
         PlayoutCore pc = new PlayoutCore();
         pc.run();
@@ -67,7 +66,7 @@ public class PlayoutCore {
          */
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsExecutor thread...");
         MvcpCmdFactory factory = new MvcpCmdFactory(melted, logger);
-        CommandsExecutor executor = new CommandsExecutor(factory, redisPublisher, cfg.getRedisPcrChannel(), commandsQueue, logger);
+        CommandsExecutor executor = new CommandsExecutor(factory, redisPublisher, cfg.getRedisPcrChannel(), commandsQueue, cfg.getMeltedPlaylistMaxDuration(), logger);
         
         Thread executorThread = new Thread(executor);
         executorThread.start(); // TODO: handle reconnection
@@ -126,7 +125,7 @@ public class PlayoutCore {
     }
     
     public boolean connectToMelted(Logger logger, ConfigurationManager cfg, MeltedTelnetClient melted){
-        //TODO: check if melted is running first, if it's not then run it
+        //TODO: check if melted is running first, if it's not then run it. Handle this with mp-melted-status signals
         
         boolean connected = melted.connect(cfg.getMeltedHost(), cfg.getMeltedPort(), logger);
         while(!connected){

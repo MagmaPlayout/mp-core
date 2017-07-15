@@ -7,6 +7,7 @@ import com.google.gson.annotations.SerializedName;
  *
  * @author rombus
  */
+// Unused
 public class RestMedia {
     @SerializedName("path")
     @Expose

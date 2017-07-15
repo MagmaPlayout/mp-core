@@ -10,8 +10,6 @@ import playoutCore.pccp.commands.PccpGETPL;
 import playoutCore.pccp.commands.PccpGOTO;
 import playoutCore.pccp.commands.PccpMOVE;
 import playoutCore.pccp.commands.PccpPLAYNOW;
-import playoutCore.pccp.commands.PccpPLPLAYNOW;
-import playoutCore.pccp.commands.PccpPLSCHED;
 import playoutCore.pccp.commands.PccpREMOVE;
 import redis.clients.jedis.Jedis;
 
@@ -42,11 +40,8 @@ public class PccpFactory {
      */
     private enum Commands {
         PLAYNOW,    // Plays given clip as soon as it can. PLAYNOW <clip id>
-        PLPLAYNOW,  // Plays given playlist as soon as it can. PLAYNOW <playlist id>
         CLEARALL,   // Removes everything from the playlist. No arguments.
-        PLSCHED,    // Schedules a given playlist. PLSCHED <playlist id> <timestamp>
         GETPL,      // Returns the playlist loaded in melted plus the clips that will be added to melted in schedule
-        GETTIMERS,  // Returns a JSON with the 3 timers (uptime, clip time, playlist remaining time)
         APND,       // Appends a clip to the playout's playlist
         REMOVE,     // Removes a given playlist index
         MOVE,       // Moves a media from 1 playlist index to another
@@ -74,15 +69,9 @@ public class PccpFactory {
             //TODO object pool for PccpCommands
             if(oc != null){
                 PccpCommand cmd = null;
-                switch(oc){
-                    case PLSCHED:
-                        cmd = new PccpPLSCHED(args, scheduler, logger);
-                        break;
+                switch(oc){                    
                     case PLAYNOW:
                         cmd = new PccpPLAYNOW(args, publisher, fscpChannel, scheduler, logger);
-                        break;
-                    case PLPLAYNOW:
-                        cmd = new PccpPLPLAYNOW(args, publisher, fscpChannel, scheduler, logger);
                         break;
                     case CLEARALL:
                         cmd = new PccpCLEARALL();
@@ -92,9 +81,6 @@ public class PccpFactory {
                         break;
                     case APND:
                         cmd = new PccpAPND(args, publisher, fscpChannel, scheduler, logger);
-                        break;
-                    case GETTIMERS:
-                        System.out.println("GETTIMERS NOT IMPLEMENTED YET!!!");
                         break;
                     case REMOVE:
                         cmd = new PccpREMOVE(args, publisher, fscpChannel, scheduler, logger);
