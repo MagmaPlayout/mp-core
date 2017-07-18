@@ -8,6 +8,6 @@
     </producer>
   
     <playlist id="playlist0">
-        <entry producer="producer0" in="{frame_in}" out="{frame_out}"/>
+        <entry producer="producer0" in="0" out="{frame_out}"/>
     </playlist>
 </mlt>
