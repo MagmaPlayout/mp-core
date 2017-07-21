@@ -45,11 +45,13 @@ public class MeltedProxy {
             public void run() {
                 System.out.println("Ejecución de appender periódico!");
                 try{
-                    PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
-                    boolean executed = tryToExecute(cmd);
-                    if(executed){
-                        commandsQueue.poll();            // Removes the first element from the FIFO queue
-                        appenderWorkerRunnable.run();    // Tries again to see if another queued command can be executed
+                    if(!commandsQueue.isEmpty()){
+                        PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
+                        boolean executed = tryToExecute(cmd);
+                        if(executed){
+                            commandsQueue.poll();            // Removes the first element from the FIFO queue
+                            appenderWorkerRunnable.run();    // Tries again to see if another queued command can be executed
+                        }
                     }
                 } catch(Exception e){
                     //TODO: handle
