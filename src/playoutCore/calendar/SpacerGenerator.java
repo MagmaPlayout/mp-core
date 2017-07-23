@@ -26,7 +26,7 @@ public class SpacerGenerator {
     /**
      * Replaces the template objects with it's corresponding data.
      * 
-     * @param line source for searching labels and replace them
+     * @param line source for searching labels and replace them (comes from the template .mlt file)
      * @param path  resource path
      * @param mltService pixbuf or avformat
      * @param fps   frames per second

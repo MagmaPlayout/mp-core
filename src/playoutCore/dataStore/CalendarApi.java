@@ -2,6 +2,8 @@ package playoutCore.dataStore;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 import playoutCore.dataStore.dataStructures.Clip;
@@ -11,35 +13,55 @@ import us.monoid.web.Resty;
 
 
 /**
- * This class is responsible for getting the required information from the rest db store.
+ * This class interacts with mp-playout-api rest module.
  * 
  * @author rombus
  */
-// Unused? check in the future...
-@Deprecated
-public class RestStore implements DataStore {
-    private static final String CLIPS_KEY = "clips";    // Json KEY that stores the list of clips
-    private static final String PATH_KEY = "path";      // Json KEY that stores the path of the current clip
-    private static final String FILTER_JSON_KEY = "idFilter";// Json KEY that stores the id of the filter of the current clip
-    private static final String FILTER_LIST_KEY = "filterList"; // Json KEY that stores all the filters available
-    private static final String FILTER_HTML_KEY = "htmlCode";   // Json KEY that stores the actual filter data
-    private static final String DURATION_KEY = "duration";      // Json KEY that stores the duration of the clip
-    private static final String FRAMELEN_KEY = "frames";        // Json KEY that stores the length of the clip in frames
-    private static final String FPS_KEY = "fps";                // Json KEY that stores the fps of the clip
-
-
-    private String baseUrl;
+public class CalendarApi implements MPPlayoutCalendarApi {
+    private static final String OCCURRENCES_PATH = "occurrences/";
+    private final String baseUrl;
     private final Resty resty;
     private final Logger logger;
 
-    public RestStore(String baseUrl, Logger logger){
+    public CalendarApi(String baseUrl, Logger logger){
         this.resty = new Resty();
         this.logger = logger;
         this.baseUrl = baseUrl;
     }
 
     
-    @Override
+     @Override
+    public ArrayList<String> getAllOccurrences() {
+        ArrayList<String> occurrences = new ArrayList<>();
+
+        try {
+            JSONObject jsonRes = resty.json(baseUrl+OCCURRENCES_PATH).toObject();
+            JSONObject piece = jsonRes.getJSONObject("piece");
+
+            ZonedDateTime startDateTime = ZonedDateTime.parse(jsonRes.getString("startDateTime"));
+            Duration duration = Duration.parse(piece.getString("duration"));
+            ZonedDateTime endDateTime = startDateTime.plus(duration.toMinutes(), ChronoUnit.MINUTES);
+            
+            String sourcePath = piece.getString("path");
+
+            if(duration == null){
+                // TODO: tirar una excepción controlada, no una runtime
+                throw new RuntimeException("No path or duration");
+            }
+
+            
+        } catch (IOException ex) {
+
+        } catch (JSONException ex) {
+            // Si la response del server no es json entra acá
+            // TODO: handle
+            ex.printStackTrace();
+        }
+        
+        return occurrences;
+    }
+
+    
     public ArrayList<Clip> getPlaylistClips(String playlistId) throws DataException{
         ArrayList<Clip> pathList = null;
 //        HashMap<String, String> hm = (HashMap<String, String>)server.hgetAll("playlist:"+playlistId);
@@ -76,7 +98,6 @@ public class RestStore implements DataStore {
         return pathList;
     }
 
-    @Override
     public String getFilter(int filterId) {
 //        String jsonString = server.lindex(FILTER_LIST_KEY, filterId);
         String filterString = null;
@@ -92,7 +113,6 @@ public class RestStore implements DataStore {
         return filterString;
     }
 
-    @Override
     public Clip getClip(String id) {
         Clip result = null;
         
@@ -126,4 +146,6 @@ public class RestStore implements DataStore {
 
         return result;
     }
+
+   
 }

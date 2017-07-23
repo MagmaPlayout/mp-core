@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
 import playoutCore.pccp.commands.PccpAPND;
+import playoutCore.pccp.commands.PccpCALCHANGE;
 import playoutCore.pccp.commands.PccpCLEARALL;
 import playoutCore.pccp.commands.PccpGETPL;
 import playoutCore.pccp.commands.PccpGOTO;
@@ -46,6 +47,7 @@ public class PccpFactory {
         REMOVE,     // Removes a given playlist index
         MOVE,       // Moves a media from 1 playlist index to another
         GOTO,       // Moves the playing cursor to the specified index
+        CALCHANGE,  // A change to the calendar schedule has been issued
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id
@@ -90,6 +92,9 @@ public class PccpFactory {
                         break;
                     case GOTO:
                         cmd = new PccpGOTO(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case CALCHANGE:
+                        cmd = new PccpCALCHANGE(args, publisher, fscpChannel, scheduler, logger);
                         break;
                 }
 
