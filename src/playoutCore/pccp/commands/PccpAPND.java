@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 import meltedBackend.common.MeltedCommandException;
 import meltedBackend.responseParser.responses.GenericResponse;
 import org.quartz.Scheduler;
-import playoutCore.dataStore.dataStructures.Clip;
+import playoutCore.dataStructures.Clip;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import redis.clients.jedis.Jedis;

@@ -36,7 +36,7 @@ public class MeltedProxy {
         this.meltedCmdFactory = meltedCmdFactory;
         this.plMaxDurationMins = meltedPlaylistMaxDuration;
         this.appenderWorkerFreq = appenderWorkerFreq;
-        commandsQueue = new ConcurrentLinkedQueue();
+        commandsQueue = new ConcurrentLinkedQueue();    // TODO: this list must be emptied when a CLEARALL command is issued
 
         // Creates the
         appenderWorker = Executors.newSingleThreadScheduledExecutor();

@@ -1,4 +1,4 @@
-package playoutCore.dataStore.dataStructures;
+package playoutCore.dataStructures;
 
 import java.time.Duration;
 

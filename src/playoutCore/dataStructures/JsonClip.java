@@ -1,4 +1,4 @@
-package playoutCore.dataStore.dataStructures;
+package playoutCore.dataStructures;
 
 /**
  * Here are the keys from the JSON object received from the frontend

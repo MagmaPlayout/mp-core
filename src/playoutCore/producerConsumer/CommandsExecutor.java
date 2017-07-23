@@ -1,6 +1,7 @@
 package playoutCore.producerConsumer;
 
 import com.google.gson.JsonObject;
+import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,6 +66,17 @@ public class CommandsExecutor implements Runnable {
                 keepRunning = false;
                 logger.log(Level.INFO, "Playout Core - Shutting down CommandsExecutor thread.");
             }
+        }
+    }
+
+    /**
+     * This method provides a way to add PccpCommands to the queue internally, that is, without using the PCCP redis channel.
+     * 
+     * @param cmds List of commands to queue
+     */
+    public void addPccpCmdsToExecute(ArrayList<PccpCommand> cmds){
+        for(PccpCommand cmd: cmds){
+            commandQueue.add(cmd);
         }
     }
 }

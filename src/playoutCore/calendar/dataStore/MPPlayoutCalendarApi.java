@@ -1,6 +1,7 @@
-package playoutCore.dataStore;
+package playoutCore.calendar.dataStore;
 
 import java.util.ArrayList;
+import playoutCore.calendar.dataStructures.Occurrence;
 
 /**
  * Interface to mp-playout-api module for use to manage the calendar feature.
@@ -8,6 +9,6 @@ import java.util.ArrayList;
  * @author rombus
  */
 public interface MPPlayoutCalendarApi {
-    ArrayList<String> getAllOccurrences();
+    ArrayList<Occurrence> getAllOccurrences();
     //TODO: en la api un método que sea delAllSpacers ?
 }

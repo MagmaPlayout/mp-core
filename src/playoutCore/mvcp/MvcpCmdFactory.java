@@ -12,7 +12,7 @@ import meltedBackend.commands.MeltedCmdApnd;
 import meltedBackend.commands.MeltedCmdFactory;
 import meltedBackend.common.MeltedClient;
 import meltedBackend.common.MeltedCommandException;
-import playoutCore.dataStore.dataStructures.Clip;
+import playoutCore.dataStructures.Clip;
 
 /**
  * This is yet another indirection layer to add core logic to some MVCP commands at MagmaPlayout level.

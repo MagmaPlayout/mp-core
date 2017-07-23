@@ -23,9 +23,9 @@ public class CommandsListener implements Runnable{
     private final ArrayBlockingQueue<PccpCommand> cmdQueue;
 
     public CommandsListener(Jedis subscriber, Jedis publisher, String pccpChannel,
-            String fscpChannel, String pcrChannel, Scheduler scheduler, ArrayBlockingQueue cmdQueue, Logger logger){
+            String fscpChannel, String pcrChannel, Scheduler scheduler, ArrayBlockingQueue cmdQueue, PccpFactory pccpFactory, Logger logger){
         jedis = subscriber;
-        pccpFactory = new PccpFactory(publisher, fscpChannel, pcrChannel, scheduler, logger);
+        this.pccpFactory = pccpFactory;
         this.logger = logger;
         this.pccpChannel = pccpChannel;
         this.cmdQueue = cmdQueue;

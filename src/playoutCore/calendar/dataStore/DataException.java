@@ -1,4 +1,4 @@
-package playoutCore.dataStore;
+package playoutCore.calendar.dataStore;
 
 /**
  * This exception is thrown whenever an error occurs on the DataStore.

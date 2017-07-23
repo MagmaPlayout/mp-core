@@ -8,8 +8,10 @@ import meltedBackend.telnetClient.MeltedTelnetClient;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
+import playoutCore.modeSwitcher.ModeManager;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
+import playoutCore.pccp.PccpFactory;
 import playoutCore.producerConsumer.CommandsExecutor;
 import playoutCore.producerConsumer.CommandsListener;
 import playoutCore.scheduler.SchedulerJobFactory;
@@ -74,7 +76,7 @@ public class PlayoutCore {
 
 
         /**
-         * Start's the command listener thread.
+         * Creates the scheduler.
          */
         // TODO: delete scheduler if it's not used
         Scheduler scheduler = null;
@@ -86,9 +88,20 @@ public class PlayoutCore {
             Logger.getLogger(PlayoutCore.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+
+        /**
+         * Creates and initializes the modeManager static reference.
+         */
+        PccpFactory pccpFactory = new PccpFactory(redisPublisher, cfg.getRedisFscpChannel(), cfg.getRedisPcrChannel(), scheduler, logger);
+        ModeManager modeManager = new ModeManager(pccpFactory, executor, logger);
+        modeManager.init(modeManager);
+
+        /**
+         * Start's the command listener thread.
+         */
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsListener thread...");
         CommandsListener listener = new CommandsListener(redisPCCPSubscriber, redisPublisher,
-                cfg.getRedisPccpChannel(), cfg.getRedisFscpChannel(), cfg.getRedisPcrChannel(), scheduler, commandsQueue, logger);
+                cfg.getRedisPccpChannel(), cfg.getRedisFscpChannel(), cfg.getRedisPcrChannel(), scheduler, commandsQueue, pccpFactory, logger);
 
         Thread listenerThread = new Thread(listener);
         try{
