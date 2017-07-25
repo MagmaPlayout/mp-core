@@ -13,8 +13,8 @@ public class Occurrence {
     public ZonedDateTime endDateTime;
     public String path;
     public Duration len;
-    public int frameLen;
-    public int fps;
+    public int frameCount;  // Length in frames
+    public int frameRate;   // FPS
 
     public Occurrence(){}
 
@@ -23,7 +23,7 @@ public class Occurrence {
         this.endDateTime = endDateTime;
         this.path = path;
         this.len = len;
-        this.frameLen = frameLen;
-        this.fps = fps;
+        this.frameCount = frameLen;
+        this.frameRate = fps;
     }
 }

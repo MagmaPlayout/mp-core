@@ -137,6 +137,7 @@ public class MeltedProxy {
             //TODO: asumo que melted está en modo play
             plEndTimestamp = plEndTimestamp.plus(length);
             logger.log(Level.INFO, "MeltedProxy executed a APND command. Playlist will run until {0}", plEndTimestamp.toString());
+            logger.log(Level.INFO, cmd.toString());
         }
         else {
             logger.log(Level.WARNING, "MeltedProxy tried to execute a APND command but failed!");

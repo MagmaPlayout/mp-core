@@ -39,9 +39,19 @@ public class CalendarMode implements Runnable{
         // add every other occurrence
 
         ArrayList<PccpCommand> commands = new ArrayList<>();
+        int curPos = 1;
         for(Occurrence cur:occurrences){
-            //TODO: COMLPETAR EL APND            
-            commands.add(cmdFactory.getCommand("APND {\"piece\":{\"path\":\""+cur.path+"\"}}"));
+            commands.add(cmdFactory.getCommand(
+                "APND { " 
+                +" \"piece\":{ "  
+                    +" \"path\":\""     + cur.path  +"\", "
+                    +" \"duration\":\"" + cur.len   +"\", "
+                    +" \"frameRate\":"  + cur.frameRate     +", "
+                    +" \"frameCount\":" + cur.frameCount    +" "
+                    +" }, "
+                    +" \"currentPos\":" + curPos++
+                +" }"
+            ));
         }
 
         cmdExecutor.addPccpCmdsToExecute(commands);

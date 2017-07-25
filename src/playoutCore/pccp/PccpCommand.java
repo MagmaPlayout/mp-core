@@ -52,13 +52,13 @@ public abstract class PccpCommand {
 
             //TODO: el filterId está deprecated???
             int filterId = Clip.NO_FILTER;
-            if(args.getAsJsonPrimitive(FILTER_ID_KEY) != null){
-                filterId = args.getAsJsonPrimitive(FILTER_ID_KEY).getAsInt();
+            if(piece.getAsJsonPrimitive(FILTER_ID_KEY) != null){
+                filterId = piece.getAsJsonPrimitive(FILTER_ID_KEY).getAsInt();
             }
 
             // TODO: definir bien el JSON que vienen en args
-            int frameLen = args.getAsJsonPrimitive(FRAME_LEN_KEY).getAsInt();
-            int fps = args.getAsJsonPrimitive(FPS_KEY).getAsInt();
+            int frameLen = piece.getAsJsonPrimitive(FRAME_LEN_KEY).getAsInt();
+            int fps = piece.getAsJsonPrimitive(FPS_KEY).getAsInt();
 
             int plIdx = this.args.getAsJsonPrimitive(PLAYLIST_IDX_KEY).getAsInt();
 

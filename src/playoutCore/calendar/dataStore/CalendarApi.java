@@ -32,19 +32,26 @@ public class CalendarApi implements MPPlayoutCalendarApi {
         this.baseUrl = baseUrl;
     }
 
-    
-     @Override
+
+    /**
+     * Makes a rest get request to the OCCURRENCE_PATH of mp-playout-api to get all the configured occurrences.
+     * With that info it creates a list of Occurrence objects.
+     * 
+     * @return the list of occurrence objects.
+     */
+    @Override
     public ArrayList<Occurrence> getAllOccurrences() {
         ArrayList<Occurrence> occurrences = new ArrayList<>();
 
         try {
             JSONArray jsonOccurrences = resty.json(baseUrl+OCCURRENCES_PATH).array();
             int len = jsonOccurrences.length();
-            
+
+            // Iterate over every occurrence creating Occurrence objects
             for(int i=0; i<len; i++){
                 JSONObject curOccurrence = jsonOccurrences.getJSONObject(i);
                 JSONObject piece = curOccurrence.getJSONObject(JsonOccurrence.PIECE_KEY);
-
+                
                 ZonedDateTime startDateTime = ZonedDateTime.parse(curOccurrence.getString(JsonOccurrence.START_DATE_TIME_KEY));
                 Duration duration = Duration.parse(piece.getString(JsonOccurrence.DURATION_KEY));
                 ZonedDateTime endDateTime = startDateTime.plus(duration.toMinutes(), ChronoUnit.MINUTES);
@@ -66,6 +73,7 @@ public class CalendarApi implements MPPlayoutCalendarApi {
             }
             
         } catch (IOException ex) {
+            // TODO: handle
             // MALFORMED URL (por ej)
             ex.printStackTrace();
         } catch (JSONException ex) {

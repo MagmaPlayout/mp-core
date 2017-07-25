@@ -19,14 +19,16 @@ import playoutCore.calendar.dataStructures.Occurrence;
  * @author rombus
  */
 public class SpacerGenerator {
-    private static final String SPACER_TEMPLATE_PATH = "../../templates/spacer.mpmlt";
+    private static final String SPACER_TEMPLATE_PATH = "templates/spacer.mpmlt";
     private static final String IMAGE_MLT_SERVICE = "pixbuf";
     private static final int IMAGE_FPS = 10;
-    private final String defaultMediaPath;
+    private final String defaultMediaPath, spacersPath;
     private static int ctr = 0;
 
     public SpacerGenerator(){
-        defaultMediaPath = ConfigurationManager.getInstance().getDefaultMediaPath();
+        ConfigurationManager cfgMgr = ConfigurationManager.getInstance();
+        defaultMediaPath = cfgMgr.getDefaultMediaPath();
+        spacersPath = cfgMgr.getMltSpacersPath(); // TODO: create default path on installation
     }
 
 
@@ -74,12 +76,14 @@ public class SpacerGenerator {
     /**
      * Generates a spacer clip with a pixbuf mlt_service of the given duration.
      *
+     * @param startDateTime
+     * @param endDateTime
      * @param length duration of the spacer
      * @return path of the generated .mlt spacer
      */
     public Occurrence generateImageSpacer(ZonedDateTime startDateTime, ZonedDateTime endDateTime, Duration length){
         try {
-            String path = "spacer"+ctr+".mlt"; //TODO: define name and path
+            String path = spacersPath+"spacer"+ctr+".mlt"; //TODO: define name and path
             PrintWriter pw = new PrintWriter(path);
             int durationInFrames = (int)length.getSeconds() * IMAGE_FPS;            
             ctr++;
@@ -88,6 +92,7 @@ public class SpacerGenerator {
             for(String line: lines){
                 pw.println(processLine(line, defaultMediaPath, IMAGE_MLT_SERVICE, IMAGE_FPS, durationInFrames, durationInFrames));
             }
+            pw.flush();
             pw.close();
 
             return new Occurrence(startDateTime, endDateTime, path, length, durationInFrames, IMAGE_FPS);

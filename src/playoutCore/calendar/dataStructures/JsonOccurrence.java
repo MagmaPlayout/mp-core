@@ -9,5 +9,5 @@ import playoutCore.dataStructures.JsonClip;
  * @author rombus
  */
 public class JsonOccurrence extends JsonClip {
-    public static final String START_DATE_TIME_KEY = "start_date_time";
+    public static final String START_DATE_TIME_KEY = "startDateTime";
 }
