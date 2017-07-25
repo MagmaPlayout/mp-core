@@ -43,7 +43,7 @@ public class MeltedProxy {
         appenderWorkerRunnable = new Runnable() {
             @Override
             public void run() {
-                System.out.println("Ejecución de appender periódico!");
+                logger.log(Level.INFO, "MeltedProxy: appenderWorkerRunnable running.");
                 try{
                     if(!commandsQueue.isEmpty()){
                         PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
@@ -115,6 +115,7 @@ public class MeltedProxy {
         else {
             //TODO: debug log
             logger.log(Level.INFO, "MeltedProxy: no need for APND.");
+            logger.log(Level.INFO, "plEndTimestamp: "+plEndTimestamp.toString());
         }
 
         return executed;

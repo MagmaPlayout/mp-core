@@ -53,7 +53,6 @@ public class CommandsExecutor implements Runnable {
                     meltedProxy.execute((PccpAPND)cmd);
                 }
                 else {
-                    System.out.println("commandsexecutor detectó un NOOOO PccpAPND, osea otro cmd");
                     if(cmd instanceof PccpGETPL){ //TODO: make this distinction more abstract
                         JsonObject response = cmd.executeForResponse(meltedCmdFactory);
                         publisher.publish(pcrChannel, response.toString());

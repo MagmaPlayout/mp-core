@@ -71,4 +71,9 @@ public abstract class PccpCommand {
     public Duration getLength(){
         return Duration.parse(args.getAsJsonObject(PIECE_KEY).getAsJsonPrimitive(DURATION_KEY).toString().replace("\"", ""));
     }
+
+    @Override
+    public String toString(){
+        return args.toString();
+    }
 }

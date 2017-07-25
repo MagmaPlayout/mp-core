@@ -36,6 +36,9 @@ public class PlayoutCore {
         ConfigurationManager cfg = ConfigurationManager.getInstance();
         cfg.init(logger);
 
+        // Prints loaded configuration
+        cfg.printConfig(logger);
+
         // Commands Queue
         ArrayBlockingQueue<PccpCommand> commandsQueue = new ArrayBlockingQueue(100, true);
 
