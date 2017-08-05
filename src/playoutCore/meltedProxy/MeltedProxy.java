@@ -23,7 +23,7 @@ import playoutCore.pccp.commands.PccpAPND;
  */
 public class MeltedProxy {
     private final Logger logger;
-    private final int plMaxDurationMins;
+    private final int plMaxDurationSeconds;
     private LocalDateTime plEndTimestamp;
     private final MvcpCmdFactory meltedCmdFactory;
     private final ConcurrentLinkedQueue<PccpAPND> commandsQueue;
@@ -34,7 +34,7 @@ public class MeltedProxy {
     public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, int appenderWorkerFreq, Logger logger){
         this.logger = logger;
         this.meltedCmdFactory = meltedCmdFactory;
-        this.plMaxDurationMins = meltedPlaylistMaxDuration;
+        this.plMaxDurationSeconds = meltedPlaylistMaxDuration * 60; // meltedPlaylistMaxDuration is in minutes
         this.appenderWorkerFreq = appenderWorkerFreq;
         commandsQueue = new ConcurrentLinkedQueue();    // TODO: this list must be emptied when a CLEARALL command is issued
 
@@ -105,11 +105,16 @@ public class MeltedProxy {
     private boolean tryToExecute(PccpAPND cmd){
         boolean executed = false;
 
+        LocalDateTime nowLDT = LocalDateTime.now();
+        if (plEndTimestamp != null){
+            logger.log(Level.INFO, "Seconds between now and plEndTimestamp:  "+String.valueOf(ChronoUnit.SECONDS.between(nowLDT, plEndTimestamp)));
+        }
+
         if (plEndTimestamp == null){ // No medias loaded in melted
             plEndTimestamp = LocalDateTime.now();
             executed = doExecute(cmd);
         }
-        else if ( ChronoUnit.SECONDS.between(LocalDateTime.now(), plEndTimestamp) < plMaxDurationMins ){
+        else if ( ChronoUnit.SECONDS.between(nowLDT, plEndTimestamp) < plMaxDurationSeconds ){
             executed = doExecute(cmd);
         }
         else {
