@@ -4,12 +4,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
+import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.pccp.commands.PccpAPND;
 import playoutCore.pccp.commands.PccpCALCHANGE;
 import playoutCore.pccp.commands.PccpCLEARALL;
 import playoutCore.pccp.commands.PccpGETPL;
 import playoutCore.pccp.commands.PccpGOTO;
 import playoutCore.pccp.commands.PccpMOVE;
+import playoutCore.pccp.commands.PccpPLAY;
 import playoutCore.pccp.commands.PccpPLAYNOW;
 import playoutCore.pccp.commands.PccpREMOVE;
 import redis.clients.jedis.Jedis;
@@ -41,6 +43,7 @@ public class PccpFactory {
      */
     private enum Commands {
         PLAYNOW,    // Plays given clip as soon as it can. PLAYNOW <clip id>
+        PLAY,       // Makes melted start playing it's playlist
         CLEARALL,   // Removes everything from the playlist. No arguments.
         GETPL,      // Returns the playlist loaded in melted plus the clips that will be added to melted in schedule
         APND,       // Appends a clip to the playout's playlist
@@ -74,6 +77,9 @@ public class PccpFactory {
                 switch(oc){                    
                     case PLAYNOW:
                         cmd = new PccpPLAYNOW(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case PLAY:
+                        cmd = new PccpPLAY(args, publisher, fscpChannel, scheduler, logger);
                         break;
                     case CLEARALL:
                         cmd = new PccpCLEARALL();
@@ -129,5 +135,26 @@ public class PccpFactory {
         //TODO: handle args being null on commands that NEED args.
         PccpCommand cmd = Commands.convertCmdStrToObj(opcode, args, publisher, fscpChannel, pcrChannel, scheduler, logger);
         return cmd;
+    }
+
+    /**
+     * Returns an APND PCCP Command from an Occurrence.
+     *
+     * @param oc  Occurrence loaded with the data to put in APND command
+     * @param pos curentPos
+     * @return
+     */
+    public PccpCommand getAPNDFromOccurrence(Occurrence oc, int pos){
+        return getCommand(
+                "APND { "
+                +" \"piece\":{ "
+                    +" \"path\":\""     + oc.path  +"\", "
+                    +" \"duration\":\"" + oc.len   +"\", "
+                    +" \"frameRate\":"  + oc.frameRate     +", "
+                    +" \"frameCount\":" + oc.frameCount    +" "
+                    +" }, "
+                    +" \"currentPos\":" + pos
+                +" }"
+            );
     }
 }

@@ -15,6 +15,8 @@ import playoutCore.pccp.commands.PccpAPND;
 
 /**
  * This class handles when to send APND commands to Melted.
+ * You should not use it directly, use the CommandsExecutor class to handle the commands list.
+ * 
  * This class must be the bottleneck of all melted media additions.
  * The purpose of that is to not overload Melted's playlist and just
  * keep an approximated configured amount of time loaded.
@@ -30,6 +32,7 @@ public class MeltedProxy {
     private final ScheduledExecutorService appenderWorker;
     private final Runnable appenderWorkerRunnable;
     private final int appenderWorkerFreq;
+    private boolean appenderRunning = false;
 
     public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, int appenderWorkerFreq, Logger logger){
         this.logger = logger;
@@ -43,26 +46,38 @@ public class MeltedProxy {
         appenderWorkerRunnable = new Runnable() {
             @Override
             public void run() {
-                logger.log(Level.INFO, "MeltedProxy: appenderWorkerRunnable running.");
-                try{
-                    if(!commandsQueue.isEmpty()){
-                        PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
-                        boolean executed = tryToExecute(cmd);
-                        if(executed){
-                            commandsQueue.poll();            // Removes the first element from the FIFO queue
-                            appenderWorkerRunnable.run();    // Tries again to see if another queued command can be executed
+                if(!appenderRunning){
+                    appenderRunning = true;
+                    
+                    logger.log(Level.INFO, "MeltedProxy: appenderWorkerRunnable running.");
+                    try{
+                        if(!commandsQueue.isEmpty()){
+                            PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
+                            boolean executed = tryToExecute(cmd);
+                            if(executed){
+                                commandsQueue.poll();            // Removes the first element from the FIFO queue
+                                appenderWorkerRunnable.run();    // Tries again to see if another queued command can be executed
+                            }
                         }
+                    } catch(Exception e){
+                        //TODO: handle
+                        System.out.println("Exception on appenderWorkerRunnable");
+                        e.printStackTrace();
+                    } finally {
+                        appenderRunning = false;
                     }
-                } catch(Exception e){
-                    //TODO: handle
-                    System.out.println("Exception on appenderWorkerRunnable");
-                    e.printStackTrace();
                 }
             }
         };
         appenderWorker.scheduleAtFixedRate(appenderWorkerRunnable, 1, appenderWorkerFreq, TimeUnit.MINUTES);
     }
 
+    /**
+     * A way to force the execution of commandsQueue commands.
+     */
+    public void tryToExecuteNow(){
+        appenderWorkerRunnable.run();
+    }
     
     /**
      * Interface for "executing" commands.     

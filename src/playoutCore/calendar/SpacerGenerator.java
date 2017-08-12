@@ -19,13 +19,18 @@ import playoutCore.calendar.dataStructures.Occurrence;
  * @author rombus
  */
 public class SpacerGenerator {
+    private static SpacerGenerator instance = new SpacerGenerator();
     private static final String SPACER_TEMPLATE_PATH = "templates/spacer.mpmlt";
     private static final String IMAGE_MLT_SERVICE = "pixbuf";
     private static final int IMAGE_FPS = 10;
     private final String defaultMediaPath, spacersPath;
     private static int ctr = 0;
 
-    public SpacerGenerator(){
+    public static SpacerGenerator getInstance(){
+        return instance;
+    }
+
+    private SpacerGenerator(){
         ConfigurationManager cfgMgr = ConfigurationManager.getInstance();
         defaultMediaPath = cfgMgr.getDefaultMediaPath();
         spacersPath = cfgMgr.getMltSpacersPath(); // TODO: create default path on installation

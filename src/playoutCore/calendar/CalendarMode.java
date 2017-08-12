@@ -25,7 +25,7 @@ public class CalendarMode implements Runnable{
         this.api = api;
         this.cmdFactory = cmdFactory;
         this.cmdExecutor = cmdExecutor;
-        spacerGen = new SpacerGenerator();
+        spacerGen = SpacerGenerator.getInstance();
     }
 
     @Override
@@ -41,17 +41,8 @@ public class CalendarMode implements Runnable{
         ArrayList<PccpCommand> commands = new ArrayList<>();
         int curPos = 1;
         for(Occurrence cur:occurrences){
-            commands.add(cmdFactory.getCommand(
-                "APND { " 
-                +" \"piece\":{ "  
-                    +" \"path\":\""     + cur.path  +"\", "
-                    +" \"duration\":\"" + cur.len   +"\", "
-                    +" \"frameRate\":"  + cur.frameRate     +", "
-                    +" \"frameCount\":" + cur.frameCount    +" "
-                    +" }, "
-                    +" \"currentPos\":" + curPos++
-                +" }"
-            ));
+            commands.add(cmdFactory.getAPNDFromOccurrence(cur, curPos));
+            curPos++;
         }
 
         cmdExecutor.addPccpCmdsToExecute(commands);

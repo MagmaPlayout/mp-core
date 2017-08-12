@@ -78,4 +78,8 @@ public class CommandsExecutor implements Runnable {
             commandQueue.add(cmd);
         }
     }
+
+    public void tellMeltedProxyToTryNow(){
+        meltedProxy.tryToExecuteNow();
+    }
 }

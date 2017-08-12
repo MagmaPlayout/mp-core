@@ -117,6 +117,10 @@ public class PlayoutCore {
         }
 
         logger.log(Level.INFO, "Playout Core - Ready...\n\n");
+        logger.log(Level.INFO, "Playout Core - Loading saved playlist...\n\n");
+        ContentLoader contentLoader = new ContentLoader(executor, pccpFactory);
+        contentLoader.loadSavedClips();
+        logger.log(Level.INFO, "Playout Core - Loaded initial content. \n\n");
     }
         
     /**
