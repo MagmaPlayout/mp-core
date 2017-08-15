@@ -16,8 +16,8 @@ import playoutCore.producerConsumer.CommandsExecutor;
  */
 public class ContentLoader {
     private final SpacerGenerator spacerGen;
-    private CommandsExecutor executor;
-    private PccpFactory pccpFactory;
+    private final CommandsExecutor executor;
+    private final PccpFactory pccpFactory;
     
 
     public ContentLoader(CommandsExecutor executor, PccpFactory pccpFactory){
@@ -39,7 +39,7 @@ public class ContentLoader {
         // para determinar que cargar y que no, incluyendo el número de frame
 
         // if( no hay medias en la bd) {
-        Occurrence oc = spacerGen.generateImageSpacer(null, null, Duration.of(10, ChronoUnit.MINUTES));
+        Occurrence oc = spacerGen.generateImageSpacer(null, null, Duration.of(2, ChronoUnit.MINUTES));
         PccpCommand cmd = pccpFactory.getAPNDFromOccurrence(oc, 0);
         commands.add(cmd);
         // }

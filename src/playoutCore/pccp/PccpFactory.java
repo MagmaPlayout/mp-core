@@ -26,15 +26,18 @@ import redis.clients.jedis.Jedis;
 public class PccpFactory {
     private final Jedis publisher;
     private final String fscpChannel, pcrChannel;
-    private final Scheduler scheduler;
     private final Logger logger;
+    private Scheduler scheduler;
 
-    public PccpFactory(Jedis publisher, String fscpChannel, String pcrChannel, Scheduler scheduler, Logger logger){
+    public PccpFactory(Jedis publisher, String fscpChannel, String pcrChannel, Logger logger){
         this.publisher = publisher;
         this.fscpChannel = fscpChannel;
         this.pcrChannel = pcrChannel;
-        this.scheduler = scheduler;
         this.logger = logger;
+    }
+
+    public void setScheduler(Scheduler scheduler){
+        this.scheduler = scheduler;
     }
 
 
@@ -144,8 +147,8 @@ public class PccpFactory {
      * @param pos curentPos
      * @return
      */
-    public PccpCommand getAPNDFromOccurrence(Occurrence oc, int pos){
-        return getCommand(
+    public PccpAPND getAPNDFromOccurrence(Occurrence oc, int pos){
+        return (PccpAPND) getCommand(
                 "APND { "
                 +" \"piece\":{ "
                     +" \"path\":\""     + oc.path  +"\", "

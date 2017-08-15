@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import playoutCore.meltedProxy.MeltedProxy;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
+import playoutCore.pccp.PccpFactory;
 import playoutCore.pccp.commands.PccpAPND;
 import playoutCore.pccp.commands.PccpGETPL;
 import redis.clients.jedis.Jedis;
@@ -27,7 +28,7 @@ public class CommandsExecutor implements Runnable {
     private final String pcrChannel;
     private final MeltedProxy meltedProxy;
 
-    public CommandsExecutor(MvcpCmdFactory factory, Jedis publisher, String pcrChannel,
+    public CommandsExecutor(MvcpCmdFactory factory, PccpFactory pccpFactory, Jedis publisher, String pcrChannel,
             ArrayBlockingQueue<PccpCommand> commandQueue, int meltedPlaylistMaxDuration, int appenderWorkerFrq, Logger logger){
         this.meltedCmdFactory = factory;
         this.commandQueue = commandQueue;
@@ -36,7 +37,7 @@ public class CommandsExecutor implements Runnable {
         this.publisher = publisher;
         this.pcrChannel = pcrChannel; // Responses channel
         
-        meltedProxy = new MeltedProxy(meltedPlaylistMaxDuration, factory, appenderWorkerFrq, logger);
+        meltedProxy = new MeltedProxy(meltedPlaylistMaxDuration, factory, pccpFactory, appenderWorkerFrq, logger);
     }
     
     @Override

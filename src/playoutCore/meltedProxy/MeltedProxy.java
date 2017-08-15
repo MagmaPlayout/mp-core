@@ -9,18 +9,21 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import playoutCore.calendar.SpacerGenerator;
+import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
+import playoutCore.pccp.PccpFactory;
 import playoutCore.pccp.commands.PccpAPND;
 
 /**
  * This class handles when to send APND commands to Melted.
  * You should not use it directly, use the CommandsExecutor class to handle the commands list.
- * 
+ *
  * This class must be the bottleneck of all melted media additions.
  * The purpose of that is to not overload Melted's playlist and just
  * keep an approximated configured amount of time loaded.
- * 
+ *
  * @author rombus
  */
 public class MeltedProxy {
@@ -33,8 +36,9 @@ public class MeltedProxy {
     private final Runnable appenderWorkerRunnable;
     private final int appenderWorkerFreq;
     private boolean appenderRunning = false;
+    
 
-    public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, int appenderWorkerFreq, Logger logger){
+    public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, PccpFactory pccpFactory, int appenderWorkerFreq, Logger logger){
         this.logger = logger;
         this.meltedCmdFactory = meltedCmdFactory;
         this.plMaxDurationSeconds = meltedPlaylistMaxDuration * 60; // meltedPlaylistMaxDuration is in minutes
@@ -48,7 +52,7 @@ public class MeltedProxy {
             public void run() {
                 if(!appenderRunning){
                     appenderRunning = true;
-                    
+
                     logger.log(Level.INFO, "MeltedProxy: appenderWorkerRunnable running.");
                     try{
                         if(!commandsQueue.isEmpty()){
@@ -58,6 +62,10 @@ public class MeltedProxy {
                                 commandsQueue.poll();            // Removes the first element from the FIFO queue
                                 appenderWorkerRunnable.run();    // Tries again to see if another queued command can be executed
                             }
+                        } else {
+                            // See if I can fit in a default media
+                            Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(2, ChronoUnit.MINUTES));
+                            tryToExecute(pccpFactory.getAPNDFromOccurrence(oc, 0));
                         }
                     } catch(Exception e){
                         //TODO: handle
@@ -78,12 +86,12 @@ public class MeltedProxy {
     public void tryToExecuteNow(){
         appenderWorkerRunnable.run();
     }
-    
+
     /**
-     * Interface for "executing" commands.     
+     * Interface for "executing" commands.
      * In reality commands are only added to a queue here, and another process
      * executes them when needed.
-     * 
+     *
      * @param cmd
      */
     public void execute(PccpAPND cmd){
@@ -107,7 +115,7 @@ public class MeltedProxy {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    
+
     /**
      * This method is called repeatedly to execute the APND commands when needed.
      *
@@ -145,7 +153,7 @@ public class MeltedProxy {
     /**
      * Executes the PccpCommand and modifies the plEndTimestamp accordingly.
      * This method is called by tryToExecute(cmd);
-     * 
+     *
      * @param cmd
      * @return true if command succeded; false otherwise
      */
