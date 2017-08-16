@@ -108,6 +108,19 @@ public class SpacerGenerator {
         return null;
     }
 
+    /**
+     * Generates a spacer clip with the duration between startDateTime and endDateTime.
+     * 
+     * @param startDateTime
+     * @param endDateTime
+     * @return
+     */
+    public Occurrence generateImageSpacer(ZonedDateTime startDateTime, ZonedDateTime endDateTime){
+        return generateImageSpacer(startDateTime, endDateTime, Duration.of(ChronoUnit.SECONDS.between(endDateTime, startDateTime), ChronoUnit.SECONDS));
+    }
+
+
+
     public String generateVideoSpacer(){
         // TODO: Implement
         return "";

@@ -27,6 +27,7 @@ import playoutCore.pccp.commands.PccpAPND;
  * @author rombus
  */
 public class MeltedProxy {
+    public static boolean autoPilot = true; // Autopilot is when there are no clips to play and the MeltedProxy starts appending the default media over and over
     private final Logger logger;
     private final int plMaxDurationSeconds;
     private LocalDateTime plEndTimestamp;
@@ -59,13 +60,16 @@ public class MeltedProxy {
                             PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
                             boolean executed = tryToExecute(cmd);
                             if(executed){
+                                autoPilot = false;
                                 commandsQueue.poll();            // Removes the first element from the FIFO queue
                                 appenderWorkerRunnable.run();    // Tries again to see if another queued command can be executed
                             }
                         } else {
                             // See if I can fit in a default media
-                            Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(2, ChronoUnit.MINUTES));
-                            tryToExecute(pccpFactory.getAPNDFromOccurrence(oc, 0));
+                            Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(3, ChronoUnit.MINUTES));
+                            if(tryToExecute(pccpFactory.getAPNDFromOccurrence(oc, 0))){
+                                autoPilot = true;
+                            }
                         }
                     } catch(Exception e){
                         //TODO: handle
@@ -147,6 +151,14 @@ public class MeltedProxy {
         }
 
         return executed;
+    }
+
+    /**
+     * Returns the LocalDateTime in which the loaded melted's playlist will end.
+     * @return
+     */
+    public LocalDateTime getLoadedPlDateTimeEnd() {
+        return plEndTimestamp;
     }
 
 

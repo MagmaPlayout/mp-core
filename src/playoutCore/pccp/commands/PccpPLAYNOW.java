@@ -48,7 +48,7 @@ public class PccpPLAYNOW extends PccpCommand {
         int lastClipId = 0;
         
         try {
-            lastClipId = ((ListResponse)factory.getList(unit).exec()).getPlaylistLength()-1;
+            lastClipId = ((ListResponse)factory.getList(unit).exec()).getLastPlClipIndex()-1;
         } catch (MeltedCommandException ex) {
             logger.log(Level.SEVERE, "Playout Core - An error occured while executing the LIST melted command. Cannot get playlist lenght!");
             return false;

@@ -2,8 +2,10 @@ package playoutCore.modeSwitcher;
 
 import java.util.logging.Logger;
 import libconfig.ConfigurationManager;
+import org.quartz.Scheduler;
 import playoutCore.calendar.CalendarMode;
 import playoutCore.calendar.dataStore.CalendarApi;
+import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpFactory;
 import playoutCore.producerConsumer.CommandsExecutor;
 
@@ -21,17 +23,21 @@ public class ModeManager {
      * This class manages the different modes of MP (live mode and calendar mode at the moment).
      * You need to call init(ms) before calling this in order to setup the static instance.
      * 
+     * @param mvcpFactory
      * @param cmdFactory
      * @param cmdExecutor
+     * @param scheduler
      * @param logger 
      */
-    public ModeManager(PccpFactory cmdFactory, CommandsExecutor cmdExecutor, Logger logger){
+    public ModeManager(MvcpCmdFactory mvcpFactory, PccpFactory cmdFactory, CommandsExecutor cmdExecutor, Scheduler scheduler, Logger logger){
         this.logger = logger;
         calendarMode = new CalendarMode(
             new CalendarApi(ConfigurationManager.getInstance().getRestBaseUrl(),
             logger),
+            mvcpFactory,
             cmdFactory,
             cmdExecutor,
+            scheduler,
             logger
         );
     }

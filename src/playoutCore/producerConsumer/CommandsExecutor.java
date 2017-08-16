@@ -1,6 +1,7 @@
 package playoutCore.producerConsumer;
 
 import com.google.gson.JsonObject;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
@@ -82,5 +83,9 @@ public class CommandsExecutor implements Runnable {
 
     public void tellMeltedProxyToTryNow(){
         meltedProxy.tryToExecuteNow();
+    }
+
+    public LocalDateTime getLoadedPlDateTimeEnd(){
+        return meltedProxy.getLoadedPlDateTimeEnd();
     }
 }

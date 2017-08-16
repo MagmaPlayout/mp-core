@@ -73,8 +73,8 @@ public class PlayoutCore {
 
         PccpFactory pccpFactory = new PccpFactory(redisPublisher, cfg.getRedisFscpChannel(), cfg.getRedisPcrChannel(), logger);
 
-        MvcpCmdFactory factory = new MvcpCmdFactory(melted, logger);
-        CommandsExecutor executor = new CommandsExecutor(factory, pccpFactory, redisPublisher, cfg.getRedisPcrChannel(),
+        MvcpCmdFactory mvcpFactory = new MvcpCmdFactory(melted, logger);
+        CommandsExecutor executor = new CommandsExecutor(mvcpFactory, pccpFactory, redisPublisher, cfg.getRedisPcrChannel(),
                 commandsQueue, cfg.getMeltedPlaylistMaxDuration(), cfg.getMeltedAppenderWorkerFreq(), logger);
         
         Thread executorThread = new Thread(executor);
@@ -88,18 +88,18 @@ public class PlayoutCore {
         Scheduler scheduler = null;
         try {
             scheduler = new StdSchedulerFactory().getScheduler();
-            scheduler.setJobFactory(new SchedulerJobFactory(redisPublisher, cfg.getRedisFscpChannel(), factory, logger));
+            scheduler.setJobFactory(new SchedulerJobFactory(redisPublisher, cfg.getRedisFscpChannel(), mvcpFactory, logger));
             scheduler.start();
         } catch (SchedulerException ex) {
             Logger.getLogger(PlayoutCore.class.getName()).log(Level.SEVERE, null, ex);
         }
-        pccpFactory.setScheduler(scheduler);
+        pccpFactory.setScheduler(scheduler); //TODO: determine if the scheduler is needed in the pccpFactory
 
 
         /**
          * Creates and initializes the modeManager static reference.
          */
-        ModeManager modeManager = new ModeManager(pccpFactory, executor, logger);
+        ModeManager modeManager = new ModeManager(mvcpFactory, pccpFactory, executor, scheduler, logger);
         modeManager.init(modeManager);
 
         /**
