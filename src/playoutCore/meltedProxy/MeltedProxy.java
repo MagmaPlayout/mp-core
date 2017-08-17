@@ -54,7 +54,7 @@ public class MeltedProxy {
                 if(!appenderRunning){
                     appenderRunning = true;
 
-                    logger.log(Level.INFO, "MeltedProxy: appenderWorkerRunnable running.");
+                    logger.log(Level.INFO, "MeltedProxy - appenderWorkerRunnable running.");
                     try{
                         if(!commandsQueue.isEmpty()){
                             PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
@@ -65,6 +65,7 @@ public class MeltedProxy {
                                 appenderWorkerRunnable.run();    // Tries again to see if another queued command can be executed
                             }
                         } else {
+                            logger.log(Level.INFO, "MeltedProxy - Check to see if I can fit a default media.");
                             // See if I can fit in a default media
                             Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(3, ChronoUnit.MINUTES));
                             if(tryToExecute(pccpFactory.getAPNDFromOccurrence(oc, 0))){
@@ -150,6 +151,7 @@ public class MeltedProxy {
             logger.log(Level.INFO, "plEndTimestamp: "+plEndTimestamp.toString());
         }
 
+        logger.log(Level.INFO, "MeltedProxy - tryToExecute()! ChronoUnit.SECONDS.between(nowLDT, plEndTimestamp) < plMaxDurationSeconds: ["+ChronoUnit.SECONDS.between(nowLDT, plEndTimestamp)+", "+plMaxDurationSeconds+"]");
         return executed;
     }
 

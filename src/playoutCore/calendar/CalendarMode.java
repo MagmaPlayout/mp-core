@@ -22,22 +22,23 @@ import playoutCore.producerConsumer.CommandsExecutor;
 import playoutCore.scheduler.GotoSchedJob;
 
 /**
- *
+ * This class executes the run() method when the calendar sends a "SAVE" trigger a.k.a. CALCHANGE command.
  * @author rombus
  */
 public class CalendarMode implements Runnable{
+    private static final String UNIT = "U0";
     private final Logger logger;
-    private final PccpFactory cmdFactory;
+    private final PccpFactory pccpFactory;
     private final MvcpCmdFactory mvcpFactory;
     private final MPPlayoutCalendarApi api;
     private final SpacerGenerator spacerGen;
     private final CommandsExecutor cmdExecutor;
     private final Scheduler scheduler;
 
-    public CalendarMode(MPPlayoutCalendarApi api, MvcpCmdFactory mvcpFactory, PccpFactory cmdFactory, CommandsExecutor cmdExecutor, Scheduler scheduler, Logger logger) {
+    public CalendarMode(MPPlayoutCalendarApi api, MvcpCmdFactory mvcpFactory, PccpFactory pccpFactory, CommandsExecutor cmdExecutor, Scheduler scheduler, Logger logger) {
         this.logger = logger;
         this.api = api;
-        this.cmdFactory = cmdFactory;
+        this.pccpFactory = pccpFactory;
         this.mvcpFactory = mvcpFactory;
         this.cmdExecutor = cmdExecutor;
         this.scheduler = scheduler;
@@ -46,6 +47,7 @@ public class CalendarMode implements Runnable{
 
     @Override
     public void run() {
+        ArrayList<PccpCommand> commands = new ArrayList<>(); // Here is where all the commands will be, the APND commands and any other needed
         ArrayList<Occurrence> occurrences = api.getAllOccurrences();
         occurrences = spacerGen.generateNeededSpacers(occurrences);   // Takes the occurrences list and adds the spacers in the right places (if needed) BUT it doesn't add anything before the first occurrence
         
@@ -68,7 +70,7 @@ public class CalendarMode implements Runnable{
                     logger.log(Level.INFO, "Playout Core - Scheduling goto at: {0}", d.toString());
 
 
-                    ListResponse list = (ListResponse) mvcpFactory.getList("U0").exec();
+                    ListResponse list = (ListResponse) mvcpFactory.getList(UNIT).exec();
                     int lplclidx = list.getLastPlClipIndex();
                     int firstCalClip = lplclidx + occurrences.size();
                     logger.log(Level.INFO, "DEBUG - list.getLastPlClipIndex: "+lplclidx+", firstCalClip: "+firstCalClip);
@@ -86,7 +88,13 @@ public class CalendarMode implements Runnable{
         }
         else{
             //TODO: acá evaluar que tanto de la PL cambió para ahorrarme comandos a melted
-            // básicamente hay que borrar todo y poner lo nuevo
+            // I clean melted's playlist so further down all new APND commands are executed
+            //TODO: generar el spacer del inicio.
+            try {
+                mvcpFactory.getClean(UNIT).exec();
+            } catch (MeltedCommandException ex) {
+                logger.log(Level.SEVERE, "Playout Core - An exception occured while trying to execute a CLEAN MVCP command.");
+            }
         }
 
         // TODO: (steps)
@@ -94,10 +102,10 @@ public class CalendarMode implements Runnable{
         // take into account the actual time and the startDateTime of the first occurrence. Generate a spacer with that info and add it first of all
         // add every other occurrence
 
-        ArrayList<PccpCommand> commands = new ArrayList<>();
+        
         int curPos = 1;
         for(Occurrence cur:occurrences){
-            commands.add(cmdFactory.getAPNDFromOccurrence(cur, curPos));
+            commands.add(pccpFactory.getAPNDFromOccurrence(cur, curPos));
             curPos++;
         }
 
