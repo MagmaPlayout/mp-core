@@ -1,6 +1,7 @@
 package playoutCore.calendar;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
@@ -52,10 +53,19 @@ public class CalendarMode implements Runnable{
         occurrences = spacerGen.generateNeededSpacers(occurrences);   // Takes the occurrences list and adds the spacers in the right places (if needed) BUT it doesn't add anything before the first occurrence
         
         if(MeltedProxy.autoPilot){
+            logger.log(Level.INFO, "Playout Core - Estoy en AUTOPILOT");
+            
             ZonedDateTime calendarStarts = occurrences.get(0).startDateTime;
             ZonedDateTime defaultMediasEnds = cmdExecutor.getLoadedPlDateTimeEnd().atZone(calendarStarts.getZone()); // The time where the default medias stop playing
 
+            //TODO: hago esto como bugfix temporal para acomodar el timezone que en la BD se está guardando mal. ISSUE: https://github.com/MagmaPlayout/mp-playout-api/issues/2
+            calendarStarts = calendarStarts.plus(3, ChronoUnit.HOURS);
+            defaultMediasEnds = defaultMediasEnds.plus(3, ChronoUnit.HOURS);
+            System.out.println("START DATE TIME QUE TENGO EN LA OCCURRENCE: "+occurrences.get(0).startDateTime.toString());
+            // FIN TODO
+
             if(defaultMediasEnds.isBefore(calendarStarts) || defaultMediasEnds.isEqual(calendarStarts)){ // TODO: agregar tolerancia
+                logger.log(Level.INFO, "Playout Core - adding spacer before calendar playlist");
                 // Creates a spacer from the end of the cur PL up to the first clip of the calendar
                 Occurrence first = spacerGen.generateImageSpacer(calendarStarts, defaultMediasEnds);
 
@@ -72,7 +82,8 @@ public class CalendarMode implements Runnable{
 
                     ListResponse list = (ListResponse) mvcpFactory.getList(UNIT).exec();
                     int lplclidx = list.getLastPlClipIndex();
-                    int firstCalClip = lplclidx + occurrences.size();
+                    int firstCalClip = lplclidx +1; //+ occurrences.size();
+    //TODO: alto bug acá, estoy schedulenado un goto antes de haber apendeado
                     logger.log(Level.INFO, "DEBUG - list.getLastPlClipIndex: "+lplclidx+", firstCalClip: "+firstCalClip);
 
 
@@ -87,6 +98,7 @@ public class CalendarMode implements Runnable{
             }
         }
         else{
+            logger.log(Level.INFO, "Playout Core - No estoy en AUTOPILOT, ejecuto no más...");
             //TODO: acá evaluar que tanto de la PL cambió para ahorrarme comandos a melted
             // I clean melted's playlist so further down all new APND commands are executed
             //TODO: generar el spacer del inicio.

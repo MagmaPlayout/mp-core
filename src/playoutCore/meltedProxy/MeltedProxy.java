@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import libconfig.ConfigurationManager;
 import playoutCore.calendar.SpacerGenerator;
 import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.mvcp.MvcpCmdFactory;
@@ -37,6 +38,7 @@ public class MeltedProxy {
     private final Runnable appenderWorkerRunnable;
     private final int appenderWorkerFreq;
     private boolean appenderRunning = false;
+    private String spacersPath;
     
 
     public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, PccpFactory pccpFactory, int appenderWorkerFreq, Logger logger){
@@ -45,6 +47,7 @@ public class MeltedProxy {
         this.plMaxDurationSeconds = meltedPlaylistMaxDuration * 60; // meltedPlaylistMaxDuration is in minutes
         this.appenderWorkerFreq = appenderWorkerFreq;
         commandsQueue = new ConcurrentLinkedQueue();    // TODO: this list must be emptied when a CLEARALL command is issued
+        spacersPath = ConfigurationManager.getInstance().getMltSpacersPath();
 
         // Creates the
         appenderWorker = Executors.newSingleThreadScheduledExecutor();
@@ -60,7 +63,8 @@ public class MeltedProxy {
                             PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
                             boolean executed = tryToExecute(cmd);
                             if(executed){
-                                autoPilot = false;
+                                // If last command executed was a spacer it's because I'm on autopilot
+                                autoPilot = cmd.args.getAsJsonObject().get("piece").getAsJsonObject().get("path").getAsString().startsWith(spacersPath);                                
                                 commandsQueue.poll();            // Removes the first element from the FIFO queue
                                 appenderWorkerRunnable.run();    // Tries again to see if another queued command can be executed
                             }

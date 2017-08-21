@@ -39,7 +39,7 @@ public class ContentLoader {
         // para determinar que cargar y que no, incluyendo el número de frame
 
         // if( no hay medias en la bd) {
-        Occurrence oc = spacerGen.generateImageSpacer(null, null, Duration.of(2, ChronoUnit.MINUTES));
+        Occurrence oc = spacerGen.generateImageSpacer(null, null, Duration.of(4, ChronoUnit.MINUTES));
         PccpCommand cmd = pccpFactory.getAPNDFromOccurrence(oc, 0);
         commands.add(cmd);
         // }
