@@ -20,7 +20,7 @@ import playoutCore.calendar.dataStructures.Occurrence;
  */
 public class SpacerGenerator {
     private static SpacerGenerator instance = new SpacerGenerator();
-    private static final String SPACER_TEMPLATE_PATH = Paths.get(".").toAbsolutePath().normalize().toString()+"/../templates/spacer.mpmlt"; //TODO: poner en la config
+    private static String spacer_template_path;
     private static final String IMAGE_MLT_SERVICE = "pixbuf";
     private static final int IMAGE_FPS = 10;
     private final String defaultMediaPath, spacersPath;
@@ -31,6 +31,15 @@ public class SpacerGenerator {
     }
 
     private SpacerGenerator(){
+        //TODO: poner en la config
+        spacer_template_path = Paths.get(".").toAbsolutePath().normalize().toString();
+        if(spacer_template_path.endsWith("dist")){
+            spacer_template_path +="/../templates/spacer.mpmlt";
+        }
+        else {
+            spacer_template_path +="/templates/spacer.mpmlt";
+        }
+        
         ConfigurationManager cfgMgr = ConfigurationManager.getInstance();
         defaultMediaPath = cfgMgr.getDefaultMediaPath();
         spacersPath = cfgMgr.getMltSpacersPath(); // TODO: create default path on installation
@@ -93,7 +102,7 @@ public class SpacerGenerator {
             int durationInFrames = (int)length.getSeconds() * IMAGE_FPS;            
             ctr++;
 
-            List<String> lines = Files.readAllLines(Paths.get(SPACER_TEMPLATE_PATH));
+            List<String> lines = Files.readAllLines(Paths.get(spacer_template_path));
             for(String line: lines){
                 pw.println(processLine(line, defaultMediaPath, IMAGE_MLT_SERVICE, IMAGE_FPS, durationInFrames, durationInFrames));
             }
