@@ -20,7 +20,7 @@ import playoutCore.calendar.dataStructures.Occurrence;
  */
 public class SpacerGenerator {
     private static SpacerGenerator instance = new SpacerGenerator();
-    private static final String SPACER_TEMPLATE_PATH = "templates/spacer.mpmlt";
+    private static final String SPACER_TEMPLATE_PATH = Paths.get(".").toAbsolutePath().normalize().toString()+"/../templates/spacer.mpmlt"; //TODO: poner en la config
     private static final String IMAGE_MLT_SERVICE = "pixbuf";
     private static final int IMAGE_FPS = 10;
     private final String defaultMediaPath, spacersPath;
