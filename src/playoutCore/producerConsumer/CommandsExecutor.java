@@ -2,6 +2,8 @@ package playoutCore.producerConsumer;
 
 import com.google.gson.JsonObject;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
@@ -28,6 +30,7 @@ public class CommandsExecutor implements Runnable {
     private final Jedis publisher;
     private final String pcrChannel;
     private final MeltedProxy meltedProxy;
+    private final PccpFactory pccpFactory;
 
     public CommandsExecutor(MvcpCmdFactory factory, PccpFactory pccpFactory, Jedis publisher, String pcrChannel,
             ArrayBlockingQueue<PccpCommand> commandQueue, int meltedPlaylistMaxDuration, int appenderWorkerFrq, Logger logger){
@@ -37,6 +40,7 @@ public class CommandsExecutor implements Runnable {
         this.keepRunning = true;
         this.publisher = publisher;
         this.pcrChannel = pcrChannel; // Responses channel
+        this.pccpFactory = pccpFactory;
         
         meltedProxy = new MeltedProxy(meltedPlaylistMaxDuration, factory, pccpFactory, appenderWorkerFrq, logger);
     }
@@ -81,11 +85,54 @@ public class CommandsExecutor implements Runnable {
         }
     }
 
+    /**
+     * This method provides a way to add PccpCommands to the queue internally, that is, without using the PCCP redis channel.
+     * The startTime argument allows to calculate the plEndTimestamp from that point on (used when scheduling goto commands)
+     *
+     * @param cmds List of commands to queue
+     * @param startTime starting time of the PL that will be added
+     */
+    public void addPccpCmdsToExecute(ArrayList<PccpCommand> cmds, ZonedDateTime startTime){
+        meltedProxy.setScheduledStartingTime(startTime);
+        for(PccpCommand cmd: cmds){
+            commandQueue.add(cmd);
+        }
+    }
+
+    /**
+     * This method provides a way to add a single PccpCommands to the queue internally, that is, without using the PCCP redis channel.
+     *
+     * @param cmd command to queue
+     */
+    public void addPccpCmdToExecute(PccpCommand cmd){
+        commandQueue.add(cmd);
+    }
+
     public void tellMeltedProxyToTryNow(){
         meltedProxy.tryToExecuteNow();
     }
 
     public LocalDateTime getLoadedPlDateTimeEnd(){
         return meltedProxy.getLoadedPlDateTimeEnd();
+    }
+
+    /**
+     * Cleans MeltedProxy's list and Melted's playlist.
+     */
+    public void cleanProxyAndMeltedLists(){
+        meltedProxy.cleanAll();
+        addPccpCmdToExecute(pccpFactory.getCommand("CLEAN"));
+    }
+
+    public LocalDateTime getCurClipEndTime(){
+        JsonObject response = pccpFactory.getCommand("USTA").executeForResponse(meltedCmdFactory);
+        int len = response.get("len").getAsInt();
+        int curFrame = response.get("curFrame").getAsInt();
+        float fps = response.get("fps").getAsFloat();
+
+        int remainingFrames = len - curFrame;
+        int remainingSeconds = (int)Math.ceil(remainingFrames / fps);
+
+        return LocalDateTime.now().plus(remainingSeconds, ChronoUnit.SECONDS);
     }
 }

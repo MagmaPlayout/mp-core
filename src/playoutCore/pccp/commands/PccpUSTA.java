@@ -1,22 +1,20 @@
 package playoutCore.pccp.commands;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import meltedBackend.common.MeltedCommandException;
-import meltedBackend.responseParser.responses.ListResponse;
+import meltedBackend.responseParser.responses.UstaResponse;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 
 /**
- * This command get's the playlist stored in Melted.
- * First it wipes the list, so you only get the current playing clip and those that will play next.
+ * This command returns information obtained by the USTA command (unit status).
  * 
  * @author rombus
  */
-public class PccpGETPL extends PccpCommand {
+public class PccpUSTA extends PccpCommand {
 
     @Override
     public boolean execute(MvcpCmdFactory factory) {
@@ -29,17 +27,18 @@ public class PccpGETPL extends PccpCommand {
         String unit = "U0"; //TODO: hxc unit
 
         try {
-            factory.getWipe(unit).exec();
-            ListResponse response = (ListResponse)(factory.getList(unit).exec());
-            String[] clipsPaths = response.getMeltedPlaylist();
+            UstaResponse response = (UstaResponse)(factory.getUsta(unit).exec());
+            int curFrame = response.getPlayingClipFrame();
+            int len = response.getPlayingClipLength();
+            float fps = response.getPlayingClipFPS();
 
-            Gson gson = new Gson();
-            result.add("opcode", new JsonPrimitive("GETPL"));
-            result.add("result", new JsonPrimitive(gson.toJson(clipsPaths)));
             
-            //logger.log(Level.INFO, "A response was send to the PCR channel");
+            result.add("curFrame", new JsonPrimitive(curFrame));
+            result.add("len", new JsonPrimitive(len));
+            result.add("fps", new JsonPrimitive(fps));
+
         } catch (MeltedCommandException ex) {
-            Logger.getLogger(PccpGETPL.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PccpUSTA.class.getName()).log(Level.SEVERE, null, ex);
             return result;
         }
 

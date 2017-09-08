@@ -2,6 +2,7 @@ package playoutCore.meltedProxy;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -36,16 +37,15 @@ public class MeltedProxy {
     private final ConcurrentLinkedQueue<PccpAPND> commandsQueue;
     private final ScheduledExecutorService appenderWorker;
     private final Runnable appenderWorkerRunnable;
-    private final int appenderWorkerFreq;
     private boolean appenderRunning = false;
     private String spacersPath;
+    private ZonedDateTime startingTime;
     
 
     public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, PccpFactory pccpFactory, int appenderWorkerFreq, Logger logger){
         this.logger = logger;
         this.meltedCmdFactory = meltedCmdFactory;
         this.plMaxDurationSeconds = meltedPlaylistMaxDuration * 60; // meltedPlaylistMaxDuration is in minutes
-        this.appenderWorkerFreq = appenderWorkerFreq;
         commandsQueue = new ConcurrentLinkedQueue();    // TODO: this list must be emptied when a CLEARALL command is issued
         spacersPath = ConfigurationManager.getInstance().getMltSpacersPath();
 
@@ -182,6 +182,10 @@ public class MeltedProxy {
         if(status){
             // Add apended clip length to the plEndTimestamp
             //TODO: asumo que melted está en modo play
+            if(startingTime != null){
+                plEndTimestamp = startingTime.toLocalDateTime();
+                startingTime = null;
+            }
             plEndTimestamp = plEndTimestamp.plus(length);
             logger.log(Level.INFO, "MeltedProxy executed a APND command. Playlist will run until {0}", plEndTimestamp.toString());
             logger.log(Level.INFO, cmd.toString());
@@ -191,5 +195,24 @@ public class MeltedProxy {
         }
 
         return status;
+    }
+
+    /**
+     * Cleans commandsQueue and reset's plEndTimestamp.
+     * This way the proxy is emptied.
+     */
+    public void cleanAll(){
+        commandsQueue.clear();
+        plEndTimestamp = null;
+    }
+
+    /**
+     * Must use this when a schedule goto command is issued.
+     * It's needed to calculate the plEndTimestamp correctly
+     * 
+     * @param startTime
+     */
+    public void setScheduledStartingTime(ZonedDateTime startTime){
+        this.startingTime = startTime;
     }
 }

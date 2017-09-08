@@ -11,6 +11,9 @@ import playoutCore.producerConsumer.CommandsExecutor;
 
 /**
  * This class loads saved clips or default media if there are no saved ones.
+ * It's executed when the program is started to set up the initial content.
+ * It's never called again.
+ * TODO: load saved clips from BD (if any)
  *
  * @author rombus
  */

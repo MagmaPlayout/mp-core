@@ -7,6 +7,7 @@ import org.quartz.Scheduler;
 import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.pccp.commands.PccpAPND;
 import playoutCore.pccp.commands.PccpCALCHANGE;
+import playoutCore.pccp.commands.PccpCLEAN;
 import playoutCore.pccp.commands.PccpCLEARALL;
 import playoutCore.pccp.commands.PccpGETPL;
 import playoutCore.pccp.commands.PccpGOTO;
@@ -14,6 +15,7 @@ import playoutCore.pccp.commands.PccpMOVE;
 import playoutCore.pccp.commands.PccpPLAY;
 import playoutCore.pccp.commands.PccpPLAYNOW;
 import playoutCore.pccp.commands.PccpREMOVE;
+import playoutCore.pccp.commands.PccpUSTA;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -47,6 +49,7 @@ public class PccpFactory {
     private enum Commands {
         PLAYNOW,    // Plays given clip as soon as it can. PLAYNOW <clip id>
         PLAY,       // Makes melted start playing it's playlist
+        CLEAN,      // Removes everything from the playlist except for the playing clip. No arguments.
         CLEARALL,   // Removes everything from the playlist. No arguments.
         GETPL,      // Returns the playlist loaded in melted plus the clips that will be added to melted in schedule
         APND,       // Appends a clip to the playout's playlist
@@ -54,6 +57,7 @@ public class PccpFactory {
         MOVE,       // Moves a media from 1 playlist index to another
         GOTO,       // Moves the playing cursor to the specified index
         CALCHANGE,  // A change to the calendar schedule has been issued
+        USTA,       // Useful to get information about the playing clip
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id
@@ -84,6 +88,9 @@ public class PccpFactory {
                     case PLAY:
                         cmd = new PccpPLAY(args, publisher, fscpChannel, scheduler, logger);
                         break;
+                    case CLEAN:
+                        cmd = new PccpCLEAN();
+                        break;
                     case CLEARALL:
                         cmd = new PccpCLEARALL();
                         break;
@@ -104,6 +111,9 @@ public class PccpFactory {
                         break;
                     case CALCHANGE:
                         cmd = new PccpCALCHANGE(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case USTA:
+                        cmd = new PccpUSTA();
                         break;
                 }
 

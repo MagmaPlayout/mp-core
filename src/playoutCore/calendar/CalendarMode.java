@@ -9,13 +9,13 @@ import java.util.logging.Logger;
 import meltedBackend.common.MeltedCommandException;
 import meltedBackend.responseParser.responses.ListResponse;
 import static org.quartz.JobBuilder.newJob;
+import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleTrigger;
 import static org.quartz.TriggerBuilder.newTrigger;
 import playoutCore.calendar.dataStore.MPPlayoutCalendarApi;
 import playoutCore.calendar.dataStructures.Occurrence;
-import playoutCore.meltedProxy.MeltedProxy;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.pccp.PccpFactory;
@@ -49,71 +49,80 @@ public class CalendarMode implements Runnable{
     @Override
     public void run() {
         ArrayList<PccpCommand> commands = new ArrayList<>(); // Here is where all the commands will be, the APND commands and any other needed
-        ArrayList<Occurrence> occurrences = api.getAllOccurrences();
-        occurrences = spacerGen.generateNeededSpacers(occurrences);   // Takes the occurrences list and adds the spacers in the right places (if needed) BUT it doesn't add anything before the first occurrence
-        
-        if(MeltedProxy.autoPilot){
-            logger.log(Level.INFO, "Playout Core - Estoy en AUTOPILOT");
-            
-            ZonedDateTime calendarStarts = occurrences.get(0).startDateTime;
-            ZonedDateTime defaultMediasEnds = cmdExecutor.getLoadedPlDateTimeEnd().atZone(calendarStarts.getZone()); // The time where the default medias stop playing
+        ArrayList<Occurrence> occurrences = api.getAllOccurrences();    // This get's the playlist from the DB
 
-            //TODO: hago esto como bugfix temporal para acomodar el timezone que en la BD se está guardando mal. ISSUE: https://github.com/MagmaPlayout/mp-playout-api/issues/2
+        // Takes the occurrences list and adds the spacers in the right places (if needed) [[BUT it doesn't add anything before the first occurrence]]
+        occurrences = spacerGen.generateNeededSpacers(occurrences);
+
+        ZonedDateTime calendarStarts = occurrences.get(0).startDateTime;
+        ZonedDateTime defaultMediasEnds = cmdExecutor.getCurClipEndTime().atZone(calendarStarts.getZone());
+
+        //{ TODO: hago esto como bugfix temporal para acomodar el timezone que en la BD se está guardando mal. ISSUE: https://github.com/MagmaPlayout/mp-playout-api/issues/2
             calendarStarts = calendarStarts.plus(3, ChronoUnit.HOURS);
             defaultMediasEnds = defaultMediasEnds.plus(3, ChronoUnit.HOURS);
             System.out.println("START DATE TIME QUE TENGO EN LA OCCURRENCE: "+occurrences.get(0).startDateTime.toString());
-            // FIN TODO
+        //} FIN TODO
 
-            if(defaultMediasEnds.isBefore(calendarStarts) || defaultMediasEnds.isEqual(calendarStarts)){ // TODO: agregar tolerancia
-                logger.log(Level.INFO, "Playout Core - adding spacer before calendar playlist");
-                // Creates a spacer from the end of the cur PL up to the first clip of the calendar
-                Occurrence first = spacerGen.generateImageSpacer(calendarStarts, defaultMediasEnds);
 
+        /**
+         * TODO (acá):
+         * Filtrar la lista de "occurrences" para que los clips que estén al principio con horario anterior a NOW desaparezcan
+         * o se mueva al frame exacto, según si estás en calendar mode o venís de un switch de modo.
+         */
+
+        
+        boolean scheduleChange = false;
+        if(defaultMediasEnds.isBefore(calendarStarts) || defaultMediasEnds.isEqual(calendarStarts)){ // TODO: agregar tolerancia
+            logger.log(Level.INFO, "Playout Core - adding spacer before calendar playlist");
+            // Creates a spacer from the end of the cur PL up to the first clip of the calendar
+            Occurrence first = spacerGen.generateImageSpacer(calendarStarts, defaultMediasEnds);
+
+            if(first != null){
                 // adds the spacer as the first occurrence to the occurrences that will be added
                 occurrences.add(0, first);
             }
-            else {
-                try{
-                    // Prepares a scheduled GOTO command that will go to the first calendar clip
-                    Date d = Date.from(calendarStarts.toInstant());
-                    SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
-                    logger.log(Level.INFO, "Playout Core - Scheduling goto at: {0}", d.toString());
-
-
-                    ListResponse list = (ListResponse) mvcpFactory.getList(UNIT).exec();
-                    int lplclidx = list.getLastPlClipIndex();
-                    int firstCalClip = lplclidx +1; //+ occurrences.size();
-    //TODO: alto bug acá, estoy schedulenado un goto antes de haber apendeado
-                    logger.log(Level.INFO, "DEBUG - list.getLastPlClipIndex: "+lplclidx+", firstCalClip: "+firstCalClip);
-
-
-                    try {
-                        scheduler.scheduleJob(newJob(GotoSchedJob.class).usingJobData("clipToGoTo", firstCalClip).build(), trigger);
-                    } catch (SchedulerException ex) {
-                        logger.log(Level.SEVERE, "Playout Core - An exception occured while trying to execute a scheduled GOTO.");
-                    }
-                }catch (MeltedCommandException e){
-                    logger.log(Level.SEVERE, "Playout Core - An exception occured while trying to execute a LIST MVCP command.");
-                }
-            }
         }
-        else{
-            logger.log(Level.INFO, "Playout Core - No estoy en AUTOPILOT, ejecuto no más...");
-            //TODO: acá evaluar que tanto de la PL cambió para ahorrarme comandos a melted
-            // I clean melted's playlist so further down all new APND commands are executed
-            //TODO: generar el spacer del inicio.
-            try {
-                mvcpFactory.getClean(UNIT).exec();
-            } catch (MeltedCommandException ex) {
-                logger.log(Level.SEVERE, "Playout Core - An exception occured while trying to execute a CLEAN MVCP command.");
-            }
+        else {
+            scheduleChange = true; // Mark this flag so that I call cleanProxyAndMeltedLists() before scheduling anything
         }
+
 
         // TODO: (steps)
         // clear melted's playlist
         // take into account the actual time and the startDateTime of the first occurrence. Generate a spacer with that info and add it first of all
         // add every other occurrence
 
+        cleanProxyAndMeltedLists(); // Also cancels any scheduled goto
+        
+        if(scheduleChange){
+            try{
+                // Prepares a scheduled GOTO command that will go to the first calendar clip
+                Date d = Date.from(calendarStarts.toInstant());
+                SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
+                logger.log(Level.INFO, "Playout Core - Scheduling goto at: {0}", d.toString());
+
+
+                ListResponse list = (ListResponse) mvcpFactory.getList(UNIT).exec();
+                int lplclidx = list.getLastPlClipIndex();
+                int firstCalClip = lplclidx +1; //+ occurrences.size();
+                logger.log(Level.INFO, "DEBUG - list.getLastPlClipIndex: "+lplclidx+", firstCalClip: "+firstCalClip);
+
+
+                try {
+                    scheduler.scheduleJob(
+                            newJob(GotoSchedJob.class)
+                                    .usingJobData("clipToGoTo", firstCalClip)
+                                    .withIdentity("calSchedJob")
+                                    .build()
+                            , trigger
+                    );
+                } catch (SchedulerException ex) {
+                    logger.log(Level.SEVERE, "Playout Core - An exception occured while trying to execute a scheduled GOTO.");
+                }
+            }catch (MeltedCommandException e){
+                logger.log(Level.SEVERE, "Playout Core - An exception occured while trying to execute a LIST MVCP command.");
+            }
+        }
         
         int curPos = 1;
         for(Occurrence cur:occurrences){
@@ -124,5 +133,21 @@ public class CalendarMode implements Runnable{
         cmdExecutor.addPccpCmdsToExecute(commands);
 
         logger.log(Level.INFO, "Playout Core - CalendarMode thread finished");
+    }
+
+
+    /**
+     * Cleans all upcoming clips.
+     */
+    private void cleanProxyAndMeltedLists(){
+        try {
+            // Cancel scheduler
+            scheduler.deleteJob(JobKey.jobKey("calSchedJob"));
+
+            // Empty MeltedProxy and Melted lists
+            cmdExecutor.cleanProxyAndMeltedLists();
+        } catch (SchedulerException ex) {
+            Logger.getLogger(CalendarMode.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

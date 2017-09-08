@@ -93,9 +93,14 @@ public class SpacerGenerator {
      * @param startDateTime
      * @param endDateTime
      * @param length duration of the spacer
-     * @return path of the generated .mlt spacer
+     * @return path of the generated .mlt spacer or null if duration is 0
      */
     public Occurrence generateImageSpacer(ZonedDateTime startDateTime, ZonedDateTime endDateTime, Duration length){
+        // If duration is 0 then return null
+        if(!(length.get(ChronoUnit.SECONDS) > 0)){
+            return null;
+        }
+
         try {
             String path = spacersPath+"spacer"+ctr+".mlt"; //TODO: define name and path
             PrintWriter pw = new PrintWriter(path);

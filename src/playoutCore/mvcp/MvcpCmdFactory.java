@@ -106,4 +106,8 @@ public class MvcpCmdFactory {
     public MeltedCmd getInsert(String unit, String path, int playlistIndex){
         return factory.getNewInsertCmd(unit, path, playlistIndex);
     }
+
+    public MeltedCmd getUsta(String unit){
+        return factory.getNewUstaCmd(unit);
+    }
 }
