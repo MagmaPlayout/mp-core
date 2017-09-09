@@ -101,7 +101,7 @@ public class CalendarMode implements Runnable{
                 SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
                 logger.log(Level.INFO, "Playout Core - Scheduling goto at: {0}", d.toString());
 
-
+                // Obtains the index of the media that will be scheduled to GOTO to
                 ListResponse list = (ListResponse) mvcpFactory.getList(UNIT).exec();
                 int lplclidx = list.getLastPlClipIndex();
                 int firstCalClip = lplclidx +1; //+ occurrences.size();

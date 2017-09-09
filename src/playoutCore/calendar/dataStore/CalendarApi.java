@@ -54,7 +54,7 @@ public class CalendarApi implements MPPlayoutCalendarApi {
                 
                 ZonedDateTime startDateTime = ZonedDateTime.parse(curOccurrence.getString(JsonOccurrence.START_DATE_TIME_KEY));
                 Duration duration = Duration.parse(piece.getString(JsonOccurrence.DURATION_KEY));
-                ZonedDateTime endDateTime = startDateTime.plus(duration.toMinutes(), ChronoUnit.MINUTES);
+                ZonedDateTime endDateTime = startDateTime.plus(duration.toMillis(), ChronoUnit.MILLIS);
 
 
                 if(duration == null){

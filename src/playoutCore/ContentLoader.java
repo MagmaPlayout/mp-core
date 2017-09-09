@@ -31,6 +31,7 @@ public class ContentLoader {
 
     /**
      * Reads the DB and loads all programmed medias if any (default one otherwise).
+     * It also sends the PLAY command so that melted starts playling and never should stop.
      *
      */
     public void loadSavedClips(){
@@ -47,7 +48,7 @@ public class ContentLoader {
         commands.add(cmd);
         // }
 
-        
+
         commands.add(playCmd);
         executor.addPccpCmdsToExecute(commands);
         executor.tellMeltedProxyToTryNow();

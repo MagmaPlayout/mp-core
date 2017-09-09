@@ -32,6 +32,7 @@ public class PlayoutCore {
 
     private void run(){
         // General config
+        System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tT %4$s   %5$s%6$s%n"); // TODO: restore full log. For debugging I removed some stuff from it
         Logger logger = Logger.getLogger(PlayoutCore.class.getName());
         ConfigurationManager cfg = ConfigurationManager.getInstance();
         cfg.init(logger);

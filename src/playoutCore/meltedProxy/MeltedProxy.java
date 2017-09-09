@@ -54,22 +54,23 @@ public class MeltedProxy {
         appenderWorkerRunnable = new Runnable() {
             @Override
             public void run() {
+                logger.log(Level.INFO, "MeltedProxy - appenderWorkerRunnable running.");
+                boolean tryAgain = false;
                 if(!appenderRunning){
                     appenderRunning = true;
-
-                    logger.log(Level.INFO, "MeltedProxy - appenderWorkerRunnable running.");
                     try{
                         if(!commandsQueue.isEmpty()){
                             PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
                             boolean executed = tryToExecute(cmd);
                             if(executed){
+                                logger.log(Level.INFO, "  MeltedProxy - Apended a clip. Now will see if another one can be appended as well...");
                                 // If last command executed was a spacer it's because I'm on autopilot
                                 autoPilot = cmd.args.getAsJsonObject().get("piece").getAsJsonObject().get("path").getAsString().startsWith(spacersPath);                                
-                                commandsQueue.poll();            // Removes the first element from the FIFO queue
-                                appenderWorkerRunnable.run();    // Tries again to see if another queued command can be executed
+                                commandsQueue.poll();   // Removes the first element from the FIFO queue
+                                tryAgain = true;        // Tries again to see if another queued command can be executed
                             }
                         } else {
-                            logger.log(Level.INFO, "MeltedProxy - Check to see if I can fit a default media.");
+                            logger.log(Level.INFO, "  MeltedProxy - Check to see if I can fit a default media.");
                             // See if I can fit in a default media
                             Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(3, ChronoUnit.MINUTES));
                             if(tryToExecute(pccpFactory.getAPNDFromOccurrence(oc, 0))){
@@ -83,9 +84,20 @@ public class MeltedProxy {
                     } finally {
                         appenderRunning = false;
                     }
+                } else {
+                    logger.log(Level.INFO, "  MeltedProxy - Tried to run but already running!!");
                 }
+
+                // TODO: esto trae problemas. Ver
+                // Runs again to see if another clip can be added (real or default)
+//                if(tryAgain){
+//                    appenderWorkerRunnable.run();
+//                    logger.log(Level.INFO, "  MeltedProxy - Trying the execution again! check if you see duplicates here.");
+//                }
             }
         };
+
+        // Makes the appenderWorker to run each appenderWorkerFreq minutes and by this assuring that melted always has something to play
         appenderWorker.scheduleAtFixedRate(appenderWorkerRunnable, 1, appenderWorkerFreq, TimeUnit.MINUTES);
     }
 
@@ -138,9 +150,6 @@ public class MeltedProxy {
         boolean executed = false;
 
         LocalDateTime nowLDT = LocalDateTime.now();
-        if (plEndTimestamp != null){
-            logger.log(Level.INFO, "Seconds between now and plEndTimestamp:  "+String.valueOf(ChronoUnit.SECONDS.between(nowLDT, plEndTimestamp)));
-        }
 
         if (plEndTimestamp == null){ // No medias loaded in melted
             plEndTimestamp = LocalDateTime.now();
@@ -155,7 +164,6 @@ public class MeltedProxy {
             logger.log(Level.INFO, "plEndTimestamp: "+plEndTimestamp.toString());
         }
 
-        logger.log(Level.INFO, "MeltedProxy - tryToExecute()! ChronoUnit.SECONDS.between(nowLDT, plEndTimestamp) < plMaxDurationSeconds: ["+ChronoUnit.SECONDS.between(nowLDT, plEndTimestamp)+", "+plMaxDurationSeconds+"]");
         return executed;
     }
 
