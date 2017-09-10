@@ -1,9 +1,11 @@
 package playoutCore.calendar;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import meltedBackend.common.MeltedCommandException;
@@ -58,17 +60,17 @@ public class CalendarMode implements Runnable{
         ZonedDateTime defaultMediasEnds = cmdExecutor.getCurClipEndTime().atZone(calendarStarts.getZone());
 
         //{ TODO: hago esto como bugfix temporal para acomodar el timezone que en la BD se está guardando mal. ISSUE: https://github.com/MagmaPlayout/mp-playout-api/issues/2
-            calendarStarts = calendarStarts.plus(3, ChronoUnit.HOURS);
-            defaultMediasEnds = defaultMediasEnds.plus(3, ChronoUnit.HOURS);
+            calendarStarts = bugFix(calendarStarts);
+            defaultMediasEnds = bugFix(defaultMediasEnds);
             System.out.println("START DATE TIME QUE TENGO EN LA OCCURRENCE: "+occurrences.get(0).startDateTime.toString());
         //} FIN TODO
 
 
-        /**
-         * TODO (acá):
-         * Filtrar la lista de "occurrences" para que los clips que estén al principio con horario anterior a NOW desaparezcan
-         * o se mueva al frame exacto, según si estás en calendar mode o venís de un switch de modo.
-         */
+        // +++++++++++++++++++++++++++++
+        // TODO: implement modeSwitching
+        // +++++++++++++++++++++++++++++
+        boolean modeSwitch = false; // if switching from live mode to calendar mode this must be true
+        int startingFrame = removeOldClips(occurrences, modeSwitch);
 
         
         boolean scheduleChange = false;
@@ -85,12 +87,6 @@ public class CalendarMode implements Runnable{
         else {
             scheduleChange = true; // Mark this flag so that I call cleanProxyAndMeltedLists() before scheduling anything
         }
-
-
-        // TODO: (steps)
-        // clear melted's playlist
-        // take into account the actual time and the startDateTime of the first occurrence. Generate a spacer with that info and add it first of all
-        // add every other occurrence
 
         cleanProxyAndMeltedLists(); // Also cancels any scheduled goto
         
@@ -149,5 +145,68 @@ public class CalendarMode implements Runnable{
         } catch (SchedulerException ex) {
             Logger.getLogger(CalendarMode.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    /**
+     * Removes all clips that have a starting time before now.
+     * If you are switching from live mode to calendar mode you should send the tolerateInBetween flag as true.
+     * That way if a clip has a starting time before now, but an ending time after now you can move to the specific
+     * frame of that clip.
+     *
+     * @param playList the playlist taken from the calendar
+     * @param tolerateInBetween if true it wont remove clips that have an ending time after now. If false it will remove all clips that have a starting time before now
+     * @return the frame to move to if tolerateInBetween is true, otherwhise -1
+     */
+    private int removeOldClips(ArrayList<Occurrence> playList, boolean tolerateInBetween){
+        int framesPassed = -1;
+        ZonedDateTime now = ZonedDateTime.now();
+
+        for(Iterator<Occurrence> iterator = playList.iterator(); iterator.hasNext(); ){
+            Occurrence cur = iterator.next();
+            
+            // TODO: hago esto como bugfix temporal para acomodar el timezone que en la BD se está guardando mal. ISSUE: https://github.com/MagmaPlayout/mp-playout-api/issues/2
+            ZonedDateTime startDateTime = bugFix(cur.startDateTime);
+            // fin bugfix;
+
+            if(startDateTime.isBefore(now)){
+                if(cur.endDateTime.isAfter(now)){
+                    long secondsPassed = startDateTime.until(now, ChronoUnit.SECONDS);
+
+                    if(tolerateInBetween){
+                        float fps = cur.frameRate;
+                        framesPassed = (int)(secondsPassed / fps); // This clip should be played starting on this frame
+
+                        logger.log(Level.INFO, "CalendarMode - first clip will start playing at "+framesPassed+" frame (not 0). ");
+                    }
+                    else {
+                        // generate spacer to fill the gap
+                        Occurrence spacer = spacerGen.generateImageSpacer(null, null, Duration.of(secondsPassed, ChronoUnit.SECONDS));
+                        
+                    }
+
+
+                    break; // We found the first clip of the playlist, so we're out of this loop
+                }
+                
+                logger.log(Level.INFO, "CalendarMode - removing a clip that's in the past and can't be played.");
+                iterator.remove();
+            }
+            else {
+                // Occurrences are ordered so the first that's not before NOW means that we're done with the loop
+                break;
+            }
+        }
+        
+        return framesPassed;
+    }
+
+
+    /**
+     * TODO: hago esto como bugfix temporal para acomodar el timezone que en la BD se está guardando mal. ISSUE: https://github.com/MagmaPlayout/mp-playout-api/issues/2
+     * @param zdt
+     * @return
+     */
+    private ZonedDateTime bugFix(ZonedDateTime zdt){
+        return zdt.plus(3, ChronoUnit.HOURS);
     }
 }

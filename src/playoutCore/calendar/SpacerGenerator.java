@@ -90,8 +90,8 @@ public class SpacerGenerator {
     /**
      * Generates a spacer clip with a pixbuf mlt_service of the given duration.
      *
-     * @param startDateTime
-     * @param endDateTime
+     * @param startDateTime can be null
+     * @param endDateTime can be null
      * @param length duration of the spacer
      * @return path of the generated .mlt spacer or null if duration is 0
      */
