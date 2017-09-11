@@ -9,7 +9,10 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import libconfig.ConfigurationManager;
+import playoutCore.PlayoutCore;
 import playoutCore.calendar.dataStructures.Occurrence;
 
 /**
@@ -25,6 +28,7 @@ public class SpacerGenerator {
     private static final int IMAGE_FPS = 10;
     private final String defaultMediaPath, spacersPath;
     private static int ctr = 0;
+    private final Logger logger;
 
     public static SpacerGenerator getInstance(){
         return instance;
@@ -43,6 +47,7 @@ public class SpacerGenerator {
         ConfigurationManager cfgMgr = ConfigurationManager.getInstance();
         defaultMediaPath = cfgMgr.getDefaultMediaPath();
         spacersPath = cfgMgr.getMltSpacersPath(); // TODO: create default path on installation
+        logger = Logger.getLogger(PlayoutCore.class.getName());
     }
 
 
@@ -78,6 +83,7 @@ public class SpacerGenerator {
 
                 if(spacer != null){
                     occurrences.add(i+1, spacer); // Adds the spacer between cur and next
+                    len++;
                     i++; // Make the loop skip the added spacer in it's next iteration
                 }
             }
@@ -98,6 +104,7 @@ public class SpacerGenerator {
     public Occurrence generateImageSpacer(ZonedDateTime startDateTime, ZonedDateTime endDateTime, Duration length){
         // If duration is 0 then return null
         if(!(length.get(ChronoUnit.SECONDS) > 0)){
+            logger.log(Level.INFO, "SpacerGenerator - The length to generate a spacer is 0. No spacer will be generated.");
             return null;
         }
 
@@ -119,6 +126,8 @@ public class SpacerGenerator {
             //TODO: handle, fatal exception??
             ex.printStackTrace();
         }
+
+        logger.log(Level.INFO, "SpacerGenerator - No spacer will be generated.");
         return null;
     }
 
@@ -130,7 +139,7 @@ public class SpacerGenerator {
      * @return
      */
     public Occurrence generateImageSpacer(ZonedDateTime startDateTime, ZonedDateTime endDateTime){
-        return generateImageSpacer(startDateTime, endDateTime, Duration.of(ChronoUnit.SECONDS.between(endDateTime, startDateTime), ChronoUnit.SECONDS));
+        return generateImageSpacer(startDateTime, endDateTime, Duration.of(ChronoUnit.SECONDS.between(startDateTime, endDateTime), ChronoUnit.SECONDS));
     }
 
 
