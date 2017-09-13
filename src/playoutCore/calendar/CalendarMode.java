@@ -28,6 +28,7 @@ import playoutCore.scheduler.GotoSchedJob;
  * @author rombus
  */
 public class CalendarMode implements Runnable{
+    private static final int NO_MODE_SWITCHING = -1; // Flag that indicates that a mode switching operation is not taking place
     private static final String UNIT = "U0";
     private final Logger logger;
     private final PccpFactory pccpFactory;
@@ -55,13 +56,15 @@ public class CalendarMode implements Runnable{
         // +++++++++++++++++++++++++++++
         // TODO: implement modeSwitching
         // +++++++++++++++++++++++++++++
-        boolean modeSwitch = false; // if switching from live mode to calendar mode this must be true
+        boolean modeSwitch = true; // if switching from live mode to calendar mode this must be true
         int startingFrame = removeOldClips(occurrences, modeSwitch);
 
         // Takes the occurrences list and adds the spacers in the right places (if needed) [[BUT it doesn't add anything before the first occurrence]]
         occurrences = spacerGen.generateNeededSpacers(occurrences);
 
         ZonedDateTime calendarStarts = occurrences.get(0).startDateTime;
+        // If it's a modeswitch then calculate starting time with starting frame
+        calendarStarts = (startingFrame == NO_MODE_SWITCHING)? calendarStarts: calendarStarts.plus(startingFrame/occurrences.get(0).frameRate, ChronoUnit.SECONDS);
         ZonedDateTime defaultMediasEnds = cmdExecutor.getCurClipEndTime().atZone(calendarStarts.getZone());
         System.out.println("START DATE TIME QUE TENGO EN LA OCCURRENCE: "+calendarStarts.toString());
 
@@ -85,7 +88,7 @@ public class CalendarMode implements Runnable{
         if(scheduleChange){
             try{
                 // Prepares a scheduled GOTO command that will go to the first calendar clip
-                Date d = Date.from(calendarStarts.toInstant());
+                Date d = Date.from(calendarStarts.plus(2000,ChronoUnit.MILLIS).toInstant()); //TODO: le pongo un changui acá para workaroundear un bug. hacer bien
                 SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
                 logger.log(Level.INFO, "Playout Core - Scheduling goto at: {0}", d.toString());
 
@@ -93,13 +96,14 @@ public class CalendarMode implements Runnable{
                 ListResponse list = (ListResponse) mvcpFactory.getList(UNIT).exec();
                 int lplclidx = list.getLastPlClipIndex();
                 int firstCalClip = lplclidx +1; //+ occurrences.size();
-                logger.log(Level.INFO, "DEBUG - list.getLastPlClipIndex: "+lplclidx+", firstCalClip: "+firstCalClip);
-
+                startingFrame = (startingFrame == NO_MODE_SWITCHING)? 0:startingFrame; // If I don't want to goto a specific frame then I got to the first frame i.e. 0
+                logger.log(Level.INFO, "DEBUG - list.getLastPlClipIndex: "+lplclidx+", firstCalClip: "+firstCalClip+ ", frame: "+startingFrame);
 
                 try {
                     scheduler.scheduleJob(
                             newJob(GotoSchedJob.class)
                                     .usingJobData("clipToGoTo", firstCalClip)
+                                    .usingJobData("frameToGoTo", startingFrame)
                                     .withIdentity("calSchedJob")
                                     .build()
                             , trigger
@@ -150,7 +154,7 @@ public class CalendarMode implements Runnable{
      * @return the frame to move to if tolerateInBetween is true, otherwhise -1
      */
     private int removeOldClips(ArrayList<Occurrence> playList, boolean tolerateInBetween){
-        int framesPassed = -1;
+        int framesPassed = NO_MODE_SWITCHING;
         ZonedDateTime now = ZonedDateTime.now();
 
         for(ListIterator<Occurrence> iterator = playList.listIterator(); iterator.hasNext(); ){
@@ -162,7 +166,7 @@ public class CalendarMode implements Runnable{
                 if(endDateTime.isAfter(now)){
                     long secondsPassed = startDateTime.until(now, ChronoUnit.SECONDS);
                     float fps = cur.frameRate;
-                    framesPassed = (int) Math.round(secondsPassed / fps); // This clip should be played starting on this frame
+                    framesPassed = (int) Math.round(secondsPassed * fps); // This clip should be played starting on this frame
 
                     if(tolerateInBetween){
                         logger.log(Level.INFO, "CalendarMode - first clip will start playing at "+framesPassed+" frame (not 0). ");
@@ -177,7 +181,8 @@ public class CalendarMode implements Runnable{
                             iterator.add(spacer);
                             logger.log(Level.INFO, "CalendarMode - Adding a spacer to the start of the playlist. ");
                         }
-                        framesPassed = -2; // Code for executing a GOTO to the next clip
+
+                        framesPassed = NO_MODE_SWITCHING; // If tolerateInBetween is false then I'm not on a mode switch
                     }
 
 

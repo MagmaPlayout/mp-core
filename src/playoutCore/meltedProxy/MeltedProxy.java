@@ -63,7 +63,7 @@ public class MeltedProxy {
                             PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
                             boolean executed = tryToExecute(cmd);
                             if(executed){
-                                logger.log(Level.INFO, "  MeltedProxy - Apended a clip. Now will see if another one can be appended as well...");
+                                logger.log(Level.INFO, "  MeltedProxy - Apended a clip.");// Now will see if another one can be appended as well...");
                                 // If last command executed was a spacer it's because I'm on autopilot
                                 autoPilot = cmd.args.getAsJsonObject().get("piece").getAsJsonObject().get("path").getAsString().startsWith(spacersPath);                                
                                 commandsQueue.poll();   // Removes the first element from the FIFO queue

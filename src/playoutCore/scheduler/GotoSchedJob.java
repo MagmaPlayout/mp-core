@@ -35,15 +35,16 @@ public class GotoSchedJob implements Job{
 
         JobDataMap data = jec.getJobDetail().getJobDataMap();
         int firstClipId = data.getInt("clipToGoTo");
+        int frame = data.getInt("frameToGoTo");
 
         try {
-            GenericResponse r = factory.getGoto(unit, 0, firstClipId).exec();
+            GenericResponse r = factory.getGoto(unit, frame, firstClipId).exec();
             if(!r.cmdOk()){
                 logger.log(Level.SEVERE, "Playout Core - Scheduler - Could not move playing cursor to {0} position. Error {1}", new Object[]{firstClipId, r.getStatus()});
                 return;
             }
 
-            logger.log(Level.INFO, "Playout Core - Scheduler - Playing schedulled playlist.");
+            logger.log(Level.INFO, "Playout Core - Scheduler - Executed GOTO cmd: GOTO "+unit+" "+frame+" "+firstClipId);
         } catch (MeltedCommandException ex) {
             logger.log(Level.INFO, "Playout Core - error while executing the PLSCHED commands.");
             return;
