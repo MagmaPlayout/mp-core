@@ -15,6 +15,7 @@ import playoutCore.pccp.commands.PccpMOVE;
 import playoutCore.pccp.commands.PccpPLAY;
 import playoutCore.pccp.commands.PccpPLAYNOW;
 import playoutCore.pccp.commands.PccpREMOVE;
+import playoutCore.pccp.commands.PccpSWITCHMODE;
 import playoutCore.pccp.commands.PccpUSTA;
 import redis.clients.jedis.Jedis;
 
@@ -58,6 +59,7 @@ public class PccpFactory {
         GOTO,       // Moves the playing cursor to the specified index
         CALCHANGE,  // A change to the calendar schedule has been issued
         USTA,       // Useful to get information about the playing clip
+        SWITCHMODE, // Changes from live mode to calendar mode and viceversa
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id
@@ -114,6 +116,9 @@ public class PccpFactory {
                         break;
                     case USTA:
                         cmd = new PccpUSTA();
+                        break;
+                    case SWITCHMODE:
+                        cmd = new PccpSWITCHMODE(args, publisher, fscpChannel, scheduler, logger);
                         break;
                 }
 
