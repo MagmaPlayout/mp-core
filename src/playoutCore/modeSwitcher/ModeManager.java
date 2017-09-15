@@ -67,10 +67,11 @@ public class ModeManager {
     }
 
     public void changeToCalendarMode(){
-        // TODO: implement
+        notifyCalendarChange();
     }
 
     public void changeToLiveMode(){
-        // TODO: implement
+        calendarMode.switchToLiveMode();
+        // TODO: LOAD LIVE MODE MEDIA LIST
     }
 }

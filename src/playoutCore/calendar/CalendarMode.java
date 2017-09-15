@@ -37,6 +37,7 @@ public class CalendarMode implements Runnable{
     private final SpacerGenerator spacerGen;
     private final CommandsExecutor cmdExecutor;
     private final Scheduler scheduler;
+    private boolean commingFromLiveMode = false;
 
     public CalendarMode(MPPlayoutCalendarApi api, MvcpCmdFactory mvcpFactory, PccpFactory pccpFactory, CommandsExecutor cmdExecutor, Scheduler scheduler, Logger logger) {
         this.logger = logger;
@@ -53,11 +54,8 @@ public class CalendarMode implements Runnable{
         ArrayList<PccpCommand> commands = new ArrayList<>(); // Here is where all the commands will be, the APND commands and any other needed
         ArrayList<Occurrence> occurrences = api.getAllOccurrences();    // This get's the playlist from the DB
 
-        // +++++++++++++++++++++++++++++
-        // TODO: implement modeSwitching
-        // +++++++++++++++++++++++++++++
-        boolean modeSwitch = true; // if switching from live mode to calendar mode this must be true
-        int startingFrame = removeOldClips(occurrences, modeSwitch);
+        int startingFrame = removeOldClips(occurrences, commingFromLiveMode);
+        if(commingFromLiveMode) commingFromLiveMode = false;
 
         // Takes the occurrences list and adds the spacers in the right places (if needed) [[BUT it doesn't add anything before the first occurrence]]
         occurrences = spacerGen.generateNeededSpacers(occurrences);
@@ -199,5 +197,10 @@ public class CalendarMode implements Runnable{
         }
         
         return framesPassed;
+    }
+
+    public void switchToLiveMode(){
+        cleanProxyAndMeltedLists();
+        commingFromLiveMode = true; // I set this flag in advance here
     }
 }
