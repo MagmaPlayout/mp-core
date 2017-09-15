@@ -25,7 +25,7 @@ public class SpacerGenerator {
     private static SpacerGenerator instance = new SpacerGenerator();
     private static String spacer_template_path;
     private static final String IMAGE_MLT_SERVICE = "pixbuf";
-    private static final int IMAGE_FPS = 10;
+    private final int imageFPS;
     private final String defaultMediaPath, spacersPath;
     private static int ctr = 0;
     private final Logger logger;
@@ -48,6 +48,7 @@ public class SpacerGenerator {
         defaultMediaPath = cfgMgr.getDefaultMediaPath();
         spacersPath = cfgMgr.getMltSpacersPath(); // TODO: create default path on installation
         logger = Logger.getLogger(PlayoutCore.class.getName());
+        imageFPS = ConfigurationManager.getInstance().getMediasFPS();
     }
 
 
@@ -111,17 +112,17 @@ public class SpacerGenerator {
         try {
             String path = spacersPath+"spacer"+ctr+".mlt"; //TODO: define name and path
             PrintWriter pw = new PrintWriter(path);
-            int durationInFrames = (int)length.getSeconds() * IMAGE_FPS;            
+            int durationInFrames = (int)length.getSeconds() * imageFPS;
             ctr++;
 
             List<String> lines = Files.readAllLines(Paths.get(spacer_template_path));
             for(String line: lines){
-                pw.println(processLine(line, defaultMediaPath, IMAGE_MLT_SERVICE, IMAGE_FPS, durationInFrames, durationInFrames));
+                pw.println(processLine(line, defaultMediaPath, IMAGE_MLT_SERVICE, imageFPS, durationInFrames, durationInFrames));
             }
             pw.flush();
             pw.close();
 
-            return new Occurrence(startDateTime, endDateTime, path, length, durationInFrames, IMAGE_FPS);
+            return new Occurrence(startDateTime, endDateTime, path, length, durationInFrames, imageFPS);
         } catch (IOException ex) {
             //TODO: handle, fatal exception??
             ex.printStackTrace();

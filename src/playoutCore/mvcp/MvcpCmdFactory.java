@@ -78,7 +78,7 @@ public class MvcpCmdFactory {
     public MeltedCmd getGoto(String unit, int framePosition, int clipId){
         return factory.getNewGotoCmd(unit, framePosition, clipId);
     }
-
+    
     public MeltedCmd getPlay(String unit){
         return factory.getNewPlayCmd(unit);
     }
