@@ -99,10 +99,10 @@ public class MeltedProxy {
                     logger.log(Level.INFO, "  MeltedProxy - Trying the execution again! check if you see duplicates here.");
                     appenderWorkerRunnable.run();
                     //TODO: kill appenderWorker scheduledAtFixedRate
-//                    appenderWorker.shutdown();
+                    // appenderWorker.shutdown();
                 } else {
                     //TODO: reschedule atfixedRate the appender worker
-//                    appenderWorker.scheduleAtFixedRate(appenderWorkerRunnable, 1, appenderWorkerFreq, TimeUnit.MINUTES);
+                    // appenderWorker.scheduleAtFixedRate(appenderWorkerRunnable, 1, appenderWorkerFreq, TimeUnit.MINUTES);
                 }
             }
         };

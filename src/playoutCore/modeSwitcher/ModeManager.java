@@ -1,10 +1,12 @@
 package playoutCore.modeSwitcher;
 
+import java.util.ArrayList;
 import java.util.logging.Logger;
 import libconfig.ConfigurationManager;
 import org.quartz.Scheduler;
 import playoutCore.calendar.CalendarMode;
 import playoutCore.calendar.dataStore.CalendarApi;
+import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpFactory;
 import playoutCore.producerConsumer.CommandsExecutor;
@@ -70,8 +72,7 @@ public class ModeManager {
         notifyCalendarChange();
     }
 
-    public void changeToLiveMode(){
-        calendarMode.switchToLiveMode();
-        // TODO: LOAD LIVE MODE MEDIA LIST
+    public void changeToLiveMode(ArrayList<Occurrence> occurrences){
+        calendarMode.switchToLiveMode(occurrences);
     }
 }

@@ -199,8 +199,17 @@ public class CalendarMode implements Runnable{
         return framesPassed;
     }
 
-    public void switchToLiveMode(){
+    public void switchToLiveMode(ArrayList<Occurrence> occurrences){
         cleanProxyAndMeltedLists();
         commingFromLiveMode = true; // I set this flag in advance here
+
+        int curPos = 1;
+        ArrayList<PccpCommand> commands = new ArrayList<>();
+        for(Occurrence cur:occurrences){
+            commands.add(pccpFactory.getAPNDFromOccurrence(cur, curPos));
+            curPos++;
+        }
+
+        cmdExecutor.addPccpCmdsToExecute(commands);
     }
 }
