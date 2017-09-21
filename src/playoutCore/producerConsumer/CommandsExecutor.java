@@ -80,9 +80,14 @@ public class CommandsExecutor implements Runnable {
      * @param cmds List of commands to queue
      */
     public void addPccpCmdsToExecute(ArrayList<PccpCommand> cmds){
+        // I make sure the MeltedProxy worker won't do anything until I finish loading the PccpCommands onto the commandQueue by blocking it
+        meltedProxy.blockQueue(true);
         for(PccpCommand cmd: cmds){
             commandQueue.add(cmd);
         }
+        // Once I finish blocking the queue I tryToExecute all it's commands right away
+        meltedProxy.blockQueue(false);
+        meltedProxy.tryToExecuteNow();
     }
 
     /**

@@ -24,7 +24,7 @@ import playoutCore.producerConsumer.CommandsExecutor;
 import playoutCore.scheduler.GotoSchedJob;
 
 /**
- * This class executes the run() method when the calendar sends a "SAVE" trigger a.k.a. CALCHANGE command.
+ * This class executes the run() method when the calendar sends a CALCHANGE PCCP command.
  * @author rombus
  */
 public class CalendarMode implements Runnable{

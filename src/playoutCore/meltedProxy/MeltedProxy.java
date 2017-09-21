@@ -40,6 +40,7 @@ public class MeltedProxy {
     private boolean appenderRunning = false;
     private String spacersPath;
     private ZonedDateTime startingTime;
+    private boolean blockQueue = false;
     
 
     public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, PccpFactory pccpFactory, int appenderWorkerFreq, Logger logger){
@@ -55,6 +56,11 @@ public class MeltedProxy {
             @Override
             public void run() {
                 logger.log(Level.INFO, "MeltedProxy - appenderWorkerRunnable running.");
+                if(blockQueue){
+                    logger.log(Level.INFO, "MeltedProxy - commandsQueue locked. continue...");
+                    return;
+                }
+                
                 boolean tryAgain = false;
                 if(!appenderRunning){
                     appenderRunning = true;
@@ -64,17 +70,17 @@ public class MeltedProxy {
                             boolean executed = tryToExecute(cmd);
                             if(executed){
                                 logger.log(Level.INFO, "  MeltedProxy - Apended a clip.");// Now will see if another one can be appended as well...");
-                                // If last command executed was a spacer it's because I'm on autopilot
-                                autoPilot = cmd.args.getAsJsonObject().get("piece").getAsJsonObject().get("path").getAsString().startsWith(spacersPath);                                
                                 commandsQueue.poll();   // Removes the first element from the FIFO queue
-                                tryAgain = true;        // Tries again to see if another queued command can be executed
+                                tryAgain = true;
                             }
+
                         } else {
                             logger.log(Level.INFO, "  MeltedProxy - Check to see if I can fit a default media.");
                             // See if I can fit in a default media
                             Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(3, ChronoUnit.MINUTES));
                             if(tryToExecute(pccpFactory.getAPNDFromOccurrence(oc, 0))){
                                 autoPilot = true;
+                                tryAgain = true;
                             }
                         }
                     } catch(Exception e){
@@ -88,12 +94,16 @@ public class MeltedProxy {
                     logger.log(Level.INFO, "  MeltedProxy - Tried to run but already running!!");
                 }
 
-                // TODO: esto trae problemas. Ver
                 // Runs again to see if another clip can be added (real or default)
-//                if(tryAgain){
-//                    appenderWorkerRunnable.run();
-//                    logger.log(Level.INFO, "  MeltedProxy - Trying the execution again! check if you see duplicates here.");
-//                }
+                if(tryAgain){
+                    logger.log(Level.INFO, "  MeltedProxy - Trying the execution again! check if you see duplicates here.");
+                    appenderWorkerRunnable.run();
+                    //TODO: kill appenderWorker scheduledAtFixedRate
+//                    appenderWorker.shutdown();
+                } else {
+                    //TODO: reschedule atfixedRate the appender worker
+//                    appenderWorker.scheduleAtFixedRate(appenderWorkerRunnable, 1, appenderWorkerFreq, TimeUnit.MINUTES);
+                }
             }
         };
 
@@ -222,5 +232,15 @@ public class MeltedProxy {
      */
     public void setScheduledStartingTime(ZonedDateTime startTime){
         this.startingTime = startTime;
+    }
+
+    /**
+     * This allows to block the commandsQueue while inserting all calendar occurrences.
+     * This way the worker won't do anything until the queue is released.
+     * 
+     * @param doBlock
+     */
+    public void blockQueue(boolean doBlock){
+        this.blockQueue = doBlock;
     }
 }
