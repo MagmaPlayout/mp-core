@@ -3,12 +3,16 @@ package playoutCore.calendar;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import libconfig.ConfigurationManager;
@@ -29,6 +33,7 @@ public class SpacerGenerator {
     private final String defaultMediaPath, spacersPath;
     private static int ctr = 0;
     private final Logger logger;
+    private final ConfigurationManager cfgMgr;
 
     public static SpacerGenerator getInstance(){
         return instance;
@@ -44,7 +49,7 @@ public class SpacerGenerator {
             spacer_template_path +="/templates/spacer.mpmlt";
         }
         
-        ConfigurationManager cfgMgr = ConfigurationManager.getInstance();
+        cfgMgr = ConfigurationManager.getInstance();
         defaultMediaPath = cfgMgr.getDefaultMediaPath();
         spacersPath = cfgMgr.getMltSpacersPath(); // TODO: create default path on installation
         logger = Logger.getLogger(PlayoutCore.class.getName());
@@ -64,7 +69,8 @@ public class SpacerGenerator {
      */
     public ArrayList<Occurrence> generateNeededSpacers(ArrayList<Occurrence> occurrences){
         int len = occurrences.size();
-        
+
+        deleteOldSpacers(); // Clean spacers dir from old spacers
         for(int i=0; i+1<len; i++){
             Occurrence cur = occurrences.get(i);
             Occurrence next = occurrences.get(i+1);
@@ -171,5 +177,33 @@ public class SpacerGenerator {
         line = line.replace("{mlt_service}", mltService);
 
         return line;
+    }
+
+    /**
+     * Deletes all spacers that are older than the playlist max length.
+     * It's called every time that a CALCHANGE command is issued.
+     */
+    private void deleteOldSpacers() {
+        long olderThan = LocalDateTime.now().minus(cfgMgr.getMeltedPlaylistMaxDuration(), ChronoUnit.MINUTES).toEpochSecond(ZoneOffset.UTC);
+        Path path = Paths.get(spacersPath);
+        try {
+            Files.list(path).filter(
+                (curFile) -> {
+                    try {
+                        return Files.getLastModifiedTime(curFile).to(TimeUnit.SECONDS) < olderThan;
+                    } catch (IOException ex) {
+                        return false;
+                    }
+                }
+            ).forEach(n -> {
+                try {
+                    Files.delete(n);
+                } catch (IOException ex) {
+                    logger.log(Level.WARNING, "SpacerGenerator - Couldn't delete old spacer: "+n.getFileName());
+                }
+            });
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "SpacerGenerator - Couldn't list spacers path: "+spacersPath);
+        }
     }
 }
