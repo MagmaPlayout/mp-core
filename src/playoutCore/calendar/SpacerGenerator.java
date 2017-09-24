@@ -195,15 +195,21 @@ public class SpacerGenerator {
                         return false;
                     }
                 }
-            ).forEach(n -> {
+            ).forEach(curFile -> {
                 try {
-                    Files.delete(n);
+                    Files.delete(curFile);
                 } catch (IOException ex) {
-                    logger.log(Level.WARNING, "SpacerGenerator - Couldn't delete old spacer: "+n.getFileName());
+                    logger.log(Level.WARNING, "SpacerGenerator - Couldn't delete old spacer: "+curFile.getFileName());
                 }
             });
         } catch (IOException ex) {
             logger.log(Level.SEVERE, "SpacerGenerator - Couldn't list spacers path: "+spacersPath);
         }
+    }
+
+    private int getLastSpacerIdx(){
+        // TODO: este método devuelve cual es el siguiente ID a usar,
+        // va a servir cuando se levante el sistema después de un shutdown y los spacers estén guardados en la BD
+        return 1;
     }
 }

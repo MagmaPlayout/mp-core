@@ -59,10 +59,17 @@ public class CalendarMode implements Runnable{
 
         // Takes the occurrences list and adds the spacers in the right places (if needed) [[BUT it doesn't add anything before the first occurrence]]
         occurrences = spacerGen.generateNeededSpacers(occurrences);
+        ZonedDateTime calendarStarts;
+        if(occurrences.size() > 0){
+            calendarStarts = occurrences.get(0).startDateTime;
 
-        ZonedDateTime calendarStarts = occurrences.get(0).startDateTime;
-        // If it's a modeswitch then calculate starting time with starting frame
-        calendarStarts = (startingFrame == NO_MODE_SWITCHING)? calendarStarts: calendarStarts.plus(startingFrame/occurrences.get(0).frameRate, ChronoUnit.SECONDS);
+            // If it's a modeswitch then calculate starting time with starting frame
+            calendarStarts = (startingFrame == NO_MODE_SWITCHING)? calendarStarts: calendarStarts.plus(startingFrame/occurrences.get(0).frameRate, ChronoUnit.SECONDS);
+        }
+        else {
+            calendarStarts = ZonedDateTime.now();
+        }
+        
         ZonedDateTime defaultMediasEnds = cmdExecutor.getCurClipEndTime().atZone(calendarStarts.getZone());
         System.out.println("START DATE TIME QUE TENGO EN LA OCCURRENCE: "+calendarStarts.toString());
 
