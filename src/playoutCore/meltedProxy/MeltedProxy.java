@@ -77,7 +77,7 @@ public class MeltedProxy {
                         } else {
                             logger.log(Level.INFO, "  MeltedProxy - Check to see if I can fit a default media.");
                             // See if I can fit in a default media
-                            Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(3, ChronoUnit.MINUTES));
+                            Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(30, ChronoUnit.MINUTES)); //TODO make this length configurable
                             if(tryToExecute(pccpFactory.getAPNDFromOccurrence(oc, 0))){
                                 autoPilot = true;
                                 tryAgain = true;

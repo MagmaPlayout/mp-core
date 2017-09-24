@@ -209,7 +209,9 @@ public class CalendarMode implements Runnable{
             commands.add(pccpFactory.getAPNDFromOccurrence(cur, curPos));
             curPos++;
         }
-
-        cmdExecutor.addPccpCmdsToExecute(commands);
+        
+        if(!commands.isEmpty()){
+            cmdExecutor.addPccpCmdsToExecute(commands);
+        }
     }
 }
