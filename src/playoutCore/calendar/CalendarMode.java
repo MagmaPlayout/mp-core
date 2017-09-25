@@ -17,6 +17,7 @@ import org.quartz.SimpleTrigger;
 import static org.quartz.TriggerBuilder.newTrigger;
 import playoutCore.calendar.dataStore.MPPlayoutCalendarApi;
 import playoutCore.calendar.dataStructures.Occurrence;
+import playoutCore.dataStructures.Clip;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.pccp.PccpFactory;
@@ -206,15 +207,13 @@ public class CalendarMode implements Runnable{
         return framesPassed;
     }
 
-    public void switchToLiveMode(ArrayList<Occurrence> occurrences){
+    public void switchToLiveMode(ArrayList<Clip> clips){
         cleanProxyAndMeltedLists();
         commingFromLiveMode = true; // I set this flag in advance here
 
-        int curPos = 1;
         ArrayList<PccpCommand> commands = new ArrayList<>();
-        for(Occurrence cur:occurrences){
-            commands.add(pccpFactory.getAPNDFromOccurrence(cur, curPos));
-            curPos++;
+        for(Clip cur:clips){
+            commands.add(pccpFactory.getAPNDFromClip(cur));
         }
         
         if(!commands.isEmpty()){

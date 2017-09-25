@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
-import playoutCore.calendar.dataStructures.Occurrence;
+import playoutCore.dataStructures.Clip;
 import playoutCore.modeSwitcher.ModeManager;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
@@ -22,7 +22,7 @@ public class PccpSWITCHMODE extends PccpCommand {
     private static final int CALENDAR_MODE = 0;
     private static final int LIVE_MODE = 1;
     private static final String MODE_KEY = "mode";
-    private static final String MEDIA_LIST = "mediaList";
+    private static final String PIECE_LIST = "pieceList";
     private final Logger logger;
 
     public PccpSWITCHMODE(JsonObject args, Jedis publisher, String fscpChannel, Scheduler scheduler, Logger logger){
@@ -40,14 +40,17 @@ public class PccpSWITCHMODE extends PccpCommand {
                 ModeManager.getInstance().changeToCalendarMode();
                 break;
             case LIVE_MODE:
-                ArrayList<Occurrence> occurrences = new ArrayList<>();
-                JsonArray mediaList = args.getAsJsonArray(MEDIA_LIST);
+                ArrayList<Clip> clips = new ArrayList<>();
+                JsonArray pieceList = args.getAsJsonArray(PIECE_LIST);
 
-                for(JsonElement media: mediaList){
-                    //TODO: load occurrences list with the specified medias on the SWITCHMODE PCCP command
+
+                for(JsonElement media: pieceList){
+                    JsonObject obj = media.getAsJsonObject();
+                    String path = obj.get("path").toString();
+                    clips.add(new Clip(path, null, 0));
                 }
 
-                ModeManager.getInstance().changeToLiveMode(occurrences);
+                ModeManager.getInstance().changeToLiveMode(clips);
                 break;
         }
 

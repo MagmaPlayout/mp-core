@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
 import playoutCore.calendar.dataStructures.Occurrence;
+import playoutCore.dataStructures.Clip;
 import playoutCore.pccp.commands.PccpAPND;
 import playoutCore.pccp.commands.PccpCALCHANGE;
 import playoutCore.pccp.commands.PccpCLEAN;
@@ -174,5 +175,19 @@ public class PccpFactory {
                     +" \"currentPos\":" + pos
                 +" }"
             );
+    }
+
+    public PccpAPND getAPNDFromClip(Clip clip){
+        return (PccpAPND) getCommand(
+                "APND { "
+                +" \"piece\":{ "
+                    +" \"path\":\""     + clip.path  +"\", "
+                    +" \"duration\":\"" + clip.len   +"\", "
+                    +" \"frameRate\":"  + clip.fps   +", "
+                    +" \"frameCount\":" + clip.frameLen +" "
+                    +" }, "
+                    +" \"currentPos\":0"
+                +" }"
+        );
     }
 }

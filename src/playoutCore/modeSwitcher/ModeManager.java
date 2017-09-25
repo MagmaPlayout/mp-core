@@ -6,7 +6,7 @@ import libconfig.ConfigurationManager;
 import org.quartz.Scheduler;
 import playoutCore.calendar.CalendarMode;
 import playoutCore.calendar.dataStore.CalendarApi;
-import playoutCore.calendar.dataStructures.Occurrence;
+import playoutCore.dataStructures.Clip;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpFactory;
 import playoutCore.producerConsumer.CommandsExecutor;
@@ -72,7 +72,7 @@ public class ModeManager {
         notifyCalendarChange();
     }
 
-    public void changeToLiveMode(ArrayList<Occurrence> occurrences){
-        calendarMode.switchToLiveMode(occurrences);
+    public void changeToLiveMode(ArrayList<Clip> clips){
+        calendarMode.switchToLiveMode(clips);
     }
 }
