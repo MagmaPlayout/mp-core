@@ -31,11 +31,13 @@ public class PccpUSTA extends PccpCommand {
             int curFrame = response.getPlayingClipFrame();
             int len = response.getPlayingClipLength();
             float fps = response.getPlayingClipFPS();
+            String path = response.getPlayingClipPath();
 
             
             result.add("curFrame", new JsonPrimitive(curFrame));
             result.add("len", new JsonPrimitive(len));
             result.add("fps", new JsonPrimitive(fps));
+            result.add("path", new JsonPrimitive(path));
 
         } catch (MeltedCommandException ex) {
             Logger.getLogger(PccpUSTA.class.getName()).log(Level.SEVERE, null, ex);

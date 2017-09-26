@@ -140,4 +140,12 @@ public class CommandsExecutor implements Runnable {
 
         return LocalDateTime.now().plus(remainingSeconds, ChronoUnit.SECONDS);
     }
+
+    /**
+     * TODO: for debug.
+     * @return
+     */
+    public String getCurClipPath(){
+        return pccpFactory.getCommand("USTA").executeForResponse(meltedCmdFactory).get("path").getAsString();
+    }
 }
