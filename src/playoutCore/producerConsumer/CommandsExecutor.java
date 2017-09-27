@@ -129,8 +129,13 @@ public class CommandsExecutor implements Runnable {
         addPccpCmdToExecute(pccpFactory.getCommand("CLEAN"));
     }
 
+    /**
+     * Returns the calculated end time for the current clip.
+     * @return
+     */
     public LocalDateTime getCurClipEndTime(){
         JsonObject response = pccpFactory.getCommand("USTA").executeForResponse(meltedCmdFactory);
+        LocalDateTime now = LocalDateTime.now();
         int len = response.get("len").getAsInt();
         int curFrame = response.get("curFrame").getAsInt();
         float fps = response.get("fps").getAsFloat();
@@ -138,11 +143,27 @@ public class CommandsExecutor implements Runnable {
         int remainingFrames = len - curFrame;
         int remainingSeconds = (int)Math.ceil(remainingFrames / fps);
 
-        return LocalDateTime.now().plus(remainingSeconds, ChronoUnit.SECONDS);
+        return now.plus(remainingSeconds, ChronoUnit.SECONDS);
     }
 
     /**
-     * TODO: for debug.
+     * Returns the local time in which the current clip started playing.
+     * @return
+     */
+    public LocalDateTime getCurClipStartTime(){
+        JsonObject response = pccpFactory.getCommand("USTA").executeForResponse(meltedCmdFactory);
+        LocalDateTime now = LocalDateTime.now();
+        int curFrame = response.get("curFrame").getAsInt();
+        float fps = response.get("fps").getAsFloat();
+
+        int elapsedSeconds = (int)Math.ceil(curFrame / fps);
+
+        return now.minus(elapsedSeconds, ChronoUnit.SECONDS);
+    }
+
+    /**
+     * Returns the path of the current playing clip.
+     * Used for debugging
      * @return
      */
     public String getCurClipPath(){

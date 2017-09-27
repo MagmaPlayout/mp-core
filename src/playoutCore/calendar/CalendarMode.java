@@ -1,5 +1,6 @@
 package playoutCore.calendar;
 
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -70,15 +71,15 @@ public class CalendarMode implements Runnable{
         else {
             calendarStarts = ZonedDateTime.now();
         }
-        
-        ZonedDateTime defaultMediasEnds = cmdExecutor.getCurClipEndTime().atZone(calendarStarts.getZone());
-        System.out.println("START DATE TIME QUE TENGO EN LA OCCURRENCE: "+calendarStarts.toString());
 
+        ZonedDateTime curMediaEndTime = cmdExecutor.getCurClipEndTime().atZone(ZoneId.systemDefault());
         boolean scheduleChange = false;
-        if(defaultMediasEnds.isBefore(calendarStarts) || defaultMediasEnds.isEqual(calendarStarts)){ // TODO: agregar tolerancia
+        logger.log(Level.INFO, "Playout Core -------------- curMediaEndTime: "+curMediaEndTime.toString()+" ,clip: "+ cmdExecutor.getCurClipPath() +" calendarStarts: "+calendarStarts.toString());
+        logger.log(Level.INFO, "Playout Core -------------- curMediaStartTime: "+cmdExecutor.getCurClipStartTime().toString());
+        if(curMediaEndTime.isBefore(calendarStarts) || curMediaEndTime.isEqual(calendarStarts.plus(1,ChronoUnit.SECONDS))){ // TODO: agregar tolerancia
             logger.log(Level.INFO, "Playout Core - adding spacer before calendar playlist");
             // Creates a spacer from the end of the cur PL up to the first clip of the calendar
-            Occurrence first = spacerGen.generateImageSpacer(calendarStarts, defaultMediasEnds);
+            Occurrence first = spacerGen.generateImageSpacer(calendarStarts, curMediaEndTime);
 
             if(first != null){
                 // adds the spacer as the first occurrence to the occurrences that will be added
@@ -90,7 +91,7 @@ public class CalendarMode implements Runnable{
         }
 
         cleanProxyAndMeltedLists(); // Also cancels any scheduled goto
-        
+
         if(scheduleChange){
             try{
                 // Prepares a scheduled GOTO command that will go to the first calendar clip
@@ -121,11 +122,10 @@ public class CalendarMode implements Runnable{
                 logger.log(Level.SEVERE, "Playout Core - An exception occured while trying to execute a LIST MVCP command.");
             }
         }
-        
+
         int curPos = 1;
         for(Occurrence cur:occurrences){
-            commands.add(pccpFactory.getAPNDFromOccurrence(cur, curPos));
-            curPos++;
+            commands.add(pccpFactory.getAPNDFromOccurrence(cur, curPos++));
         }
 
         cmdExecutor.addPccpCmdsToExecute(commands);
@@ -161,41 +161,31 @@ public class CalendarMode implements Runnable{
      */
     private int removeOldClips(ArrayList<Occurrence> playList, boolean tolerateInBetween){
         int framesPassed = NO_MODE_SWITCHING;
-        ZonedDateTime now = ZonedDateTime.now();
 
         for(ListIterator<Occurrence> iterator = playList.listIterator(); iterator.hasNext(); ){
             Occurrence cur = iterator.next();
             ZonedDateTime startDateTime = cur.startDateTime;
             ZonedDateTime endDateTime = cur.endDateTime;
 
+            ZonedDateTime now = ZonedDateTime.now();
             if(startDateTime.isBefore(now)){
                 if(endDateTime.isAfter(now)){
                     long secondsPassed = startDateTime.until(now, ChronoUnit.SECONDS);
                     float fps = cur.frameRate;
-                    framesPassed = (int) Math.round(secondsPassed * fps); // This clip should be played starting on this frame
 
                     if(tolerateInBetween){
+                        framesPassed = (int) Math.round(secondsPassed * fps); // This clip should be played starting on this frame
                         logger.log(Level.INFO, "CalendarMode - first clip will start playing at "+framesPassed+" frame (not 0). ");
                     }
                     else {
-                        // generate spacer to fill the gap
-                        int secondsRemaining = (int) ((cur.frameCount - framesPassed) / fps);
-                        Occurrence spacer = spacerGen.generateImageSpacer(now, now.plus(secondsRemaining, ChronoUnit.SECONDS));
-
                         iterator.remove();
-                        if(spacer != null){
-                            iterator.add(spacer);
-                            logger.log(Level.INFO, "CalendarMode - Adding a spacer to the start of the playlist. ");
-                        }
-
                         framesPassed = NO_MODE_SWITCHING; // If tolerateInBetween is false then I'm not on a mode switch
                     }
-
 
                     break; // We found the first clip of the playlist, so we're out of this loop
                 }
                 
-                logger.log(Level.INFO, "CalendarMode - removing a clip that's in the past and can't be played.");
+                logger.log(Level.INFO, "CalendarMode - removing a clip that''s in the past and can''t be played. Path: {0}, startDateTime: {1}", new Object[]{cur.path, cur.startDateTime});
                 iterator.remove();
             }
             else {
