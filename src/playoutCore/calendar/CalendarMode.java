@@ -53,6 +53,7 @@ public class CalendarMode implements Runnable{
 
     @Override
     public void run() {
+        cmdExecutor.blockMelted(true);
         ArrayList<PccpCommand> commands = new ArrayList<>(); // Here is where all the commands will be, the APND commands and any other needed
         ArrayList<Occurrence> occurrences = api.getAllOccurrences();    // This get's the playlist from the DB
 
@@ -74,9 +75,15 @@ public class CalendarMode implements Runnable{
 
         ZonedDateTime curMediaEndTime = cmdExecutor.getCurClipEndTime().atZone(ZoneId.systemDefault());
         boolean scheduleChange = false;
-        logger.log(Level.INFO, "Playout Core -------------- curMediaEndTime: "+curMediaEndTime.toString()+" ,clip: "+ cmdExecutor.getCurClipPath() +" calendarStarts: "+calendarStarts.toString());
-        logger.log(Level.INFO, "Playout Core -------------- curMediaStartTime: "+cmdExecutor.getCurClipStartTime().toString());
-        if(curMediaEndTime.isBefore(calendarStarts) || curMediaEndTime.isEqual(calendarStarts.plus(1,ChronoUnit.SECONDS))){ // TODO: agregar tolerancia
+        
+        logger.log(Level.INFO, "Playout Core --- "
+                +" Clip: "+ cmdExecutor.getCurClipPath()
+                +", curMediaEndTime: "+ curMediaEndTime.toString()
+                +", curMediaStartTime: "+ cmdExecutor.getCurClipStartTime().toString()
+                +"; calendarStarts: "+calendarStarts.toString()
+        );
+        
+        if(curMediaEndTime.isBefore(calendarStarts) || curMediaEndTime.isEqual(calendarStarts.plus(1,ChronoUnit.SECONDS))){
             logger.log(Level.INFO, "Playout Core - adding spacer before calendar playlist");
             // Creates a spacer from the end of the cur PL up to the first clip of the calendar
             Occurrence first = spacerGen.generateImageSpacer(calendarStarts, curMediaEndTime);
@@ -128,6 +135,7 @@ public class CalendarMode implements Runnable{
             commands.add(pccpFactory.getAPNDFromOccurrence(cur, curPos++));
         }
 
+        cmdExecutor.blockMelted(false);
         cmdExecutor.addPccpCmdsToExecute(commands);
 
         logger.log(Level.INFO, "Playout Core - CalendarMode thread finished");
@@ -198,6 +206,7 @@ public class CalendarMode implements Runnable{
     }
 
     public void switchToLiveMode(ArrayList<Clip> clips){
+        cmdExecutor.blockMelted(true);
         cleanProxyAndMeltedLists();
         commingFromLiveMode = true; // I set this flag in advance here
 
@@ -205,9 +214,11 @@ public class CalendarMode implements Runnable{
         for(Clip cur:clips){
             commands.add(pccpFactory.getAPNDFromClip(cur));
         }
+
         
         if(!commands.isEmpty()){
             cmdExecutor.addPccpCmdsToExecute(commands);
         }
+        cmdExecutor.blockMelted(false);
     }
 }

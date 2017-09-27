@@ -41,6 +41,7 @@ public class MeltedProxy {
     private String spacersPath;
     private ZonedDateTime startingTime;
     private boolean blockQueue = false;
+    private boolean blockMelted = false;
     
 
     public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, PccpFactory pccpFactory, int appenderWorkerFreq, Logger logger){
@@ -56,7 +57,10 @@ public class MeltedProxy {
             @Override
             public void run() {
                 logger.log(Level.INFO, "MeltedProxy - appenderWorkerRunnable running.");
-                if(blockQueue){
+                if(blockMelted){
+                    logger.log(Level.INFO, "MeltedProxy - melted locked. continue...");
+                    return;
+                }else if(blockQueue){
                     logger.log(Level.INFO, "MeltedProxy - commandsQueue locked. continue...");
                     return;
                 }
@@ -136,6 +140,7 @@ public class MeltedProxy {
     /**
      * Call this method when melted's playlist changes by removing clips.
      */
+    @Deprecated
     public void meltedPlChanged(){
         // TODO: ver como hacemos acá
         throw new UnsupportedOperationException("Not supported yet.");
@@ -242,5 +247,9 @@ public class MeltedProxy {
      */
     public void blockQueue(boolean doBlock){
         this.blockQueue = doBlock;
+    }
+
+    public void blockMelted(boolean doBlock){
+        this.blockMelted = doBlock;
     }
 }

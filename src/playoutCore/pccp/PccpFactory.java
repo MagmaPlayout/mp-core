@@ -181,7 +181,7 @@ public class PccpFactory {
         return (PccpAPND) getCommand(
                 "APND { "
                 +" \"piece\":{ "
-                    +" \"path\":\""     + clip.path  +"\", "
+                    +" \"path\":"     + clip.path  +", "
                     +" \"duration\":\"" + clip.len   +"\", "
                     +" \"frameRate\":"  + clip.fps   +", "
                     +" \"frameCount\":" + clip.frameLen +" "

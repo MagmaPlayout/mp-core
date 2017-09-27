@@ -117,6 +117,10 @@ public class CommandsExecutor implements Runnable {
         meltedProxy.tryToExecuteNow();
     }
 
+    public void blockMelted(boolean doBlock){
+        meltedProxy.blockMelted(doBlock);
+    }
+
     public LocalDateTime getLoadedPlDateTimeEnd(){
         return meltedProxy.getLoadedPlDateTimeEnd();
     }
@@ -126,7 +130,7 @@ public class CommandsExecutor implements Runnable {
      */
     public void cleanProxyAndMeltedLists(){
         meltedProxy.cleanAll();
-        addPccpCmdToExecute(pccpFactory.getCommand("CLEAN"));
+        pccpFactory.getCommand("CLEAN").execute(meltedCmdFactory);
     }
 
     /**
