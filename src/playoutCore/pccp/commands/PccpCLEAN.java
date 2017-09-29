@@ -21,7 +21,7 @@ public class PccpCLEAN extends PccpCommand {
 
         try {
             factory.getClean(unit).exec();
-            Logger.getLogger(PccpCLEAN.class.getName()).log(Level.INFO, "Playout Core - Melted CLEAN executed.");
+            Logger.getLogger(PccpCLEAN.class.getName()).log(Level.INFO, "PccpCLEAN - Melted CLEAN executed.");
         } catch (MeltedCommandException ex) {
             //TODO handle errors
             Logger.getLogger(PccpCLEAN.class.getName()).log(Level.SEVERE, null, ex);
