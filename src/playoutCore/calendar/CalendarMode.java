@@ -19,6 +19,7 @@ import static org.quartz.TriggerBuilder.newTrigger;
 import playoutCore.calendar.dataStore.MPPlayoutCalendarApi;
 import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.dataStructures.Clip;
+import playoutCore.meltedProxy.MeltedProxy;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.pccp.PccpFactory;
@@ -60,11 +61,9 @@ public class CalendarMode implements Runnable{
         }
         running = true;
 
-
-        if(!cmdExecutor.blockMelted(true)){
-            logger.log(Level.INFO, "CalendarMode --- MELTED ALREADY BLOQUED. Done here...");
-            return;
-        }
+        cmdExecutor.interruptMeltedProxyWorker();
+        cmdExecutor.blockMelted(true);
+        MeltedProxy.calendarMode = true;
 
         ArrayList<PccpCommand> commands = new ArrayList<>(); // Here is where all the commands will be, the APND commands and any other needed
         ArrayList<Occurrence> occurrences = api.getAllOccurrences();    // This get's the playlist from the DB
@@ -96,7 +95,7 @@ public class CalendarMode implements Runnable{
         );
         
         if(curMediaEndTime.isBefore(calendarStarts) || curMediaEndTime.isEqual(calendarStarts.plus(1,ChronoUnit.SECONDS))){
-            logger.log(Level.INFO, "CalendarMode - adding spacer before calendar playlist");
+            logger.log(Level.INFO, "CalendarMode - adding spacer before calendar playlist: calendarStarts: "+calendarStarts.toString()+", curMediaEndTime: "+curMediaEndTime);
             // Creates a spacer from the end of the cur PL up to the first clip of the calendar
             Occurrence first = spacerGen.generateImageSpacer(calendarStarts, curMediaEndTime);
 
@@ -147,13 +146,13 @@ public class CalendarMode implements Runnable{
             commands.add(pccpFactory.getAPNDFromOccurrence(cur, curPos++));
         }
 
-        cmdExecutor.blockMelted(false);
         logger.log(Level.INFO, "CalendarMode - addPccpCmdsToExecute");
         cmdExecutor.addPccpCmdsToExecute(commands);
 
         logger.log(Level.INFO, "CalendarMode - CalendarMode thread finished");
         running = false;
-
+        MeltedProxy.calendarMode = false;
+        cmdExecutor.tellMeltedProxyToTryNow(); // Run again so that MeltedProxy fills the list with default media
     }
 
 
@@ -185,12 +184,12 @@ public class CalendarMode implements Runnable{
     private int removeOldClips(ArrayList<Occurrence> playList, boolean tolerateInBetween){
         int framesPassed = NO_MODE_SWITCHING;
 
+        ZonedDateTime now = ZonedDateTime.now();
         for(ListIterator<Occurrence> iterator = playList.listIterator(); iterator.hasNext(); ){
             Occurrence cur = iterator.next();
             ZonedDateTime startDateTime = cur.startDateTime;
             ZonedDateTime endDateTime = cur.endDateTime;
-
-            ZonedDateTime now = ZonedDateTime.now();
+            
             if(startDateTime.isBefore(now)){
                 if(endDateTime.isAfter(now)){
                     long secondsPassed = startDateTime.until(now, ChronoUnit.SECONDS);

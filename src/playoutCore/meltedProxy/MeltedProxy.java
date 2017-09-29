@@ -42,6 +42,7 @@ public class MeltedProxy {
     private static boolean blockMelted = false;
     private String spacersPath;
     private ZonedDateTime startingTime;
+    public static boolean calendarMode = false;
 
     public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, PccpFactory pccpFactory, int appenderWorkerFreq, Logger logger){
         this.logger = logger;
@@ -77,7 +78,7 @@ public class MeltedProxy {
                                 tryAgain = true;
                             }
 
-                        } else {
+                        } else if (!calendarMode){
                             logger.log(Level.INFO, "  MeltedProxy - Check to see if I can fit a default media.");
                             // See if I can fit in a default media
                             Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(30, ChronoUnit.MINUTES)); //TODO make this length configurable
