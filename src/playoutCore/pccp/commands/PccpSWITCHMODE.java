@@ -3,6 +3,7 @@ package playoutCore.pccp.commands;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,7 +34,7 @@ public class PccpSWITCHMODE extends PccpCommand {
     @Override
     public boolean execute(MvcpCmdFactory factory) {
         int mode = args.getAsJsonPrimitive(MODE_KEY).getAsInt();
-        logger.log(Level.INFO, "Playout Core - A switch mode action to "+ ((mode==CALENDAR_MODE)?"CALENDAR":"LIVE") +"has been requested.");
+        logger.log(Level.INFO, "PccpSWITCHMODE - A switch mode action to "+ ((mode==CALENDAR_MODE)?"CALENDAR":"LIVE") +"has been requested.");
 
         switch(mode){
             case CALENDAR_MODE:
@@ -47,7 +48,7 @@ public class PccpSWITCHMODE extends PccpCommand {
                 for(JsonElement media: pieceList){
                     JsonObject obj = media.getAsJsonObject();
                     String path = obj.get("path").toString();
-                    clips.add(new Clip(path, null, 0));
+                    clips.add(new Clip(path, Duration.parse(obj.get("duration").getAsString()), 0));
                 }
 
                 ModeManager.getInstance().changeToLiveMode(clips);
