@@ -87,6 +87,7 @@ public class CommandsExecutor implements Runnable {
         }
         // Once I finish blocking the queue I tryToExecute all it's commands right away
         meltedProxy.blockQueue(false);
+        meltedProxy.interruptAppenderThread();
         meltedProxy.tryToExecuteNow();
     }
 
@@ -117,8 +118,20 @@ public class CommandsExecutor implements Runnable {
         meltedProxy.tryToExecuteNow();
     }
 
-    public void blockMelted(boolean doBlock){
+    public boolean blockMelted(boolean doBlock){
+        // If melted is already blocked return false
+        if(doBlock == true){
+            if(!meltedProxy.isMeltedBloqued()){
+                meltedProxy.blockMelted(doBlock);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
         meltedProxy.blockMelted(doBlock);
+        return true;
     }
 
     public LocalDateTime getLoadedPlDateTimeEnd(){

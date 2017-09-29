@@ -37,12 +37,11 @@ public class MeltedProxy {
     private final ConcurrentLinkedQueue<PccpAPND> commandsQueue;
     private final ScheduledExecutorService appenderWorker;
     private final Runnable appenderWorkerRunnable;
-    private boolean appenderRunning = false;
+    private static boolean appenderRunning = false;
+    private static boolean blockQueue = false;
+    private static boolean blockMelted = false;
     private String spacersPath;
     private ZonedDateTime startingTime;
-    private boolean blockQueue = false;
-    private boolean blockMelted = false;
-    
 
     public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, PccpFactory pccpFactory, int appenderWorkerFreq, Logger logger){
         this.logger = logger;
@@ -56,7 +55,8 @@ public class MeltedProxy {
         appenderWorkerRunnable = new Runnable() {
             @Override
             public void run() {
-                logger.log(Level.INFO, "MeltedProxy - appenderWorkerRunnable running.");
+                boolean tryAgain = false;
+//                logger.log(Level.INFO, "MeltedProxy - !!!---!!! MeltedProxy Worker running.");
                 if(blockMelted){
                     logger.log(Level.INFO, "MeltedProxy - melted locked. continue...");
                     return;
@@ -65,7 +65,6 @@ public class MeltedProxy {
                     return;
                 }
                 
-                boolean tryAgain = false;
                 if(!appenderRunning){
                     appenderRunning = true;
                     try{
@@ -251,5 +250,19 @@ public class MeltedProxy {
 
     public void blockMelted(boolean doBlock){
         this.blockMelted = doBlock;
+    }
+
+    public boolean isMeltedBloqued(){
+        return this.blockMelted;
+    }
+
+    /**
+     * Stops the execution of the appenderWorkerThread and resets the blockQueue and blockMelted flags.
+     * This is called when the CalendarMode wants to run.
+     */
+    public void interruptAppenderThread(){
+        appenderWorker.shutdownNow();
+        blockQueue(false);
+        blockMelted(false);
     }
 }

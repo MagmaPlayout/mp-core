@@ -40,6 +40,7 @@ public class CalendarMode implements Runnable{
     private final CommandsExecutor cmdExecutor;
     private final Scheduler scheduler;
     private boolean commingFromLiveMode = false;
+    private static boolean running = false;
 
     public CalendarMode(MPPlayoutCalendarApi api, MvcpCmdFactory mvcpFactory, PccpFactory pccpFactory, CommandsExecutor cmdExecutor, Scheduler scheduler, Logger logger) {
         this.logger = logger;
@@ -53,7 +54,18 @@ public class CalendarMode implements Runnable{
 
     @Override
     public void run() {
-        cmdExecutor.blockMelted(true);
+        if(running){
+            logger.log(Level.INFO, "CalendarMode --- Already running!. Done here...");
+            return;
+        }
+        running = true;
+
+
+        if(!cmdExecutor.blockMelted(true)){
+            logger.log(Level.INFO, "CalendarMode --- MELTED ALREADY BLOQUED. Done here...");
+            return;
+        }
+
         ArrayList<PccpCommand> commands = new ArrayList<>(); // Here is where all the commands will be, the APND commands and any other needed
         ArrayList<Occurrence> occurrences = api.getAllOccurrences();    // This get's the playlist from the DB
 
@@ -76,7 +88,7 @@ public class CalendarMode implements Runnable{
         ZonedDateTime curMediaEndTime = cmdExecutor.getCurClipEndTime().atZone(ZoneId.systemDefault());
         boolean scheduleChange = false;
         
-        logger.log(Level.INFO, "Playout Core --- "
+        logger.log(Level.INFO, "CalendarMode --- "
                 +" Clip: "+ cmdExecutor.getCurClipPath()
                 +", curMediaEndTime: "+ curMediaEndTime.toString()
                 +", curMediaStartTime: "+ cmdExecutor.getCurClipStartTime().toString()
@@ -84,7 +96,7 @@ public class CalendarMode implements Runnable{
         );
         
         if(curMediaEndTime.isBefore(calendarStarts) || curMediaEndTime.isEqual(calendarStarts.plus(1,ChronoUnit.SECONDS))){
-            logger.log(Level.INFO, "Playout Core - adding spacer before calendar playlist");
+            logger.log(Level.INFO, "CalendarMode - adding spacer before calendar playlist");
             // Creates a spacer from the end of the cur PL up to the first clip of the calendar
             Occurrence first = spacerGen.generateImageSpacer(calendarStarts, curMediaEndTime);
 
@@ -104,14 +116,14 @@ public class CalendarMode implements Runnable{
                 // Prepares a scheduled GOTO command that will go to the first calendar clip
                 Date d = Date.from(calendarStarts.plus(2000,ChronoUnit.MILLIS).toInstant()); //TODO: le pongo un changui acá para workaroundear un bug. hacer bien
                 SimpleTrigger trigger = (SimpleTrigger) newTrigger().startAt(d).build();
-                logger.log(Level.INFO, "Playout Core - Scheduling goto at: {0}", d.toString());
+                logger.log(Level.INFO, "CalendarMode - Scheduling goto at: {0}", d.toString());
 
                 // Obtains the index of the media that will be scheduled to GOTO to
                 ListResponse list = (ListResponse) mvcpFactory.getList(UNIT).exec();
                 int lplclidx = list.getLastPlClipIndex();
                 int firstCalClip = lplclidx +1; //+ occurrences.size();
                 startingFrame = (startingFrame == NO_MODE_SWITCHING)? 0:startingFrame; // If I don't want to goto a specific frame then I got to the first frame i.e. 0
-                logger.log(Level.INFO, "DEBUG - list.getLastPlClipIndex: "+lplclidx+", firstCalClip: "+firstCalClip+ ", frame: "+startingFrame);
+                logger.log(Level.INFO, "CalendarMode DEBUG - list.getLastPlClipIndex: "+lplclidx+", firstCalClip: "+firstCalClip+ ", frame: "+startingFrame);
 
                 try {
                     scheduler.scheduleJob(
@@ -123,10 +135,10 @@ public class CalendarMode implements Runnable{
                             , trigger
                     );
                 } catch (SchedulerException ex) {
-                    logger.log(Level.SEVERE, "Playout Core - An exception occured while trying to execute a scheduled GOTO.");
+                    logger.log(Level.SEVERE, "CalendarMode - An exception occured while trying to execute a scheduled GOTO.");
                 }
             }catch (MeltedCommandException e){
-                logger.log(Level.SEVERE, "Playout Core - An exception occured while trying to execute a LIST MVCP command.");
+                logger.log(Level.SEVERE, "CalendarMode - An exception occured while trying to execute a LIST MVCP command.");
             }
         }
 
@@ -136,9 +148,12 @@ public class CalendarMode implements Runnable{
         }
 
         cmdExecutor.blockMelted(false);
+        logger.log(Level.INFO, "CalendarMode - addPccpCmdsToExecute");
         cmdExecutor.addPccpCmdsToExecute(commands);
 
-        logger.log(Level.INFO, "Playout Core - CalendarMode thread finished");
+        logger.log(Level.INFO, "CalendarMode - CalendarMode thread finished");
+        running = false;
+
     }
 
 
@@ -214,7 +229,6 @@ public class CalendarMode implements Runnable{
         for(Clip cur:clips){
             commands.add(pccpFactory.getAPNDFromClip(cur));
         }
-
         
         if(!commands.isEmpty()){
             cmdExecutor.addPccpCmdsToExecute(commands);
