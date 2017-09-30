@@ -121,22 +121,6 @@ public class CommandsExecutor implements Runnable {
         meltedProxy.tryToExecuteNow();
     }
 
-    public boolean blockMelted(boolean doBlock){
-        // If melted is already blocked return false
-        if(doBlock == true){
-            if(!meltedProxy.isMeltedBloqued()){
-                meltedProxy.blockMelted(doBlock);
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-
-        meltedProxy.blockMelted(doBlock);
-        return true;
-    }
-
     public LocalDateTime getLoadedPlDateTimeEnd(){
         return meltedProxy.getLoadedPlDateTimeEnd();
     }

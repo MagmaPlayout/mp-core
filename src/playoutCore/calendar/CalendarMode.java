@@ -62,7 +62,6 @@ public class CalendarMode implements Runnable{
         running = true;
 
         cmdExecutor.interruptMeltedProxyWorker();
-        cmdExecutor.blockMelted(true);
         MeltedProxy.activeSequenceTransaction = true;
 
         ArrayList<PccpCommand> commands = new ArrayList<>(); // Here is where all the commands will be, the APND commands and any other needed
@@ -220,7 +219,6 @@ public class CalendarMode implements Runnable{
     }
 
     public void switchToLiveMode(ArrayList<Clip> clips){
-        cmdExecutor.blockMelted(true);
         // poner un goto acá o hacer un remove
         cleanProxyAndMeltedLists();
         commingFromLiveMode = true; // I set this flag in advance here
@@ -234,7 +232,6 @@ public class CalendarMode implements Runnable{
             commands.add(cmd);
         }
         
-        cmdExecutor.blockMelted(false);
         if(!commands.isEmpty()){
             cmdExecutor.addPccpCmdsToExecute(commands);
         }

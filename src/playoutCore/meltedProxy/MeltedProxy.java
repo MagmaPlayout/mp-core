@@ -262,16 +262,6 @@ public class MeltedProxy {
         this.blockQueue = doBlock;
     }
 
-    /**
-     * el startSequenceTransaction depreca al blockMelted
-     * @param doBlock
-     * @deprecated
-     */
-    @Deprecated
-    public void blockMelted(boolean doBlock){
-        this.blockMelted = doBlock;
-    }
-
     public boolean isMeltedBloqued(){
         return this.blockMelted;
     }
@@ -292,6 +282,5 @@ public class MeltedProxy {
     public void interruptAppenderThread(){
         periodicAppenderWorker.shutdownNow();
         blockQueue(false);
-        blockMelted(false);
     }
 }
