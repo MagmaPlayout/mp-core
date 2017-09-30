@@ -58,14 +58,12 @@ public class CommandsExecutor implements Runnable {
                     // MeltedProxy makes sure that melted's playlist doesn't get overloaded
                     meltedProxy.execute((PccpAPND)cmd);
                 }
-                else {
-                    if(cmd instanceof PccpGETPL){ //TODO: make this distinction more abstract
+                else if(cmd instanceof PccpGETPL){ //TODO: make this distinction more abstract
                         JsonObject response = cmd.executeForResponse(meltedCmdFactory);
                         publisher.publish(pcrChannel, response.toString());
-                    }
-                    else {
-                        cmd.execute(meltedCmdFactory);
-                    }
+                }
+                else {
+                    cmd.execute(meltedCmdFactory);
                 }
             } catch (InterruptedException e) {
                 keepRunning = false;
@@ -87,8 +85,8 @@ public class CommandsExecutor implements Runnable {
             commandQueue.add(cmd);
         }
         // Once I finish blocking the queue I tryToExecute all it's commands right away
-        meltedProxy.blockQueue(false);
         meltedProxy.tryToExecuteNow();
+        meltedProxy.blockQueue(false);
     }
 
     public void interruptMeltedProxyWorker(){

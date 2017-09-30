@@ -221,6 +221,7 @@ public class CalendarMode implements Runnable{
 
     public void switchToLiveMode(ArrayList<Clip> clips){
         cmdExecutor.blockMelted(true);
+        // poner un goto acá o hacer un remove
         cleanProxyAndMeltedLists();
         commingFromLiveMode = true; // I set this flag in advance here
 
@@ -228,10 +229,10 @@ public class CalendarMode implements Runnable{
         for(Clip cur:clips){
             commands.add(pccpFactory.getAPNDFromClip(cur));
         }
-        
+
+        cmdExecutor.blockMelted(false);
         if(!commands.isEmpty()){
             cmdExecutor.addPccpCmdsToExecute(commands);
         }
-        cmdExecutor.blockMelted(false);
     }
 }
