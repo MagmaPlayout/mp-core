@@ -28,7 +28,6 @@ import playoutCore.pccp.PccpFactory;
  * @author rombus
  */
 public class MeltedProxy {
-    public static boolean autoPilot = true; // Autopilot is when there are no clips to play and the MeltedProxy starts appending the default media over and over
     private final Logger logger;
     private final int plMaxDurationSeconds;
     private LocalDateTime plEndTimestamp;
@@ -88,7 +87,6 @@ public class MeltedProxy {
                             // See if I can fit in a default media
                             Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(30, ChronoUnit.MINUTES)); //TODO make this length configurable
                             if(tryToExecute(pccpFactory.getAPNDFromOccurrence(oc, 0))){
-                                autoPilot = true;
                                 tryAgain = true;
                             }
                         }

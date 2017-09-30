@@ -262,4 +262,16 @@ public class CalendarMode implements Runnable{
 
         return cmd;
     }
+
+    /**
+     * If doStart is true then a spacer will be played first until the first clip
+     * that starts before "now" start's playing.
+     * If false then it will start playing on the current frame of the supposedly current playing clip.
+     * 
+     * If doStart is false the playback might start playing from the middle of a clip.
+     * @param doStart
+     */
+    public void startOnFirstClipBeforeNow(boolean doStart){
+        this.commingFromLiveMode = doStart;
+    }
 }

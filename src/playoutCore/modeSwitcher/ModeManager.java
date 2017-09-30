@@ -17,6 +17,8 @@ import playoutCore.producerConsumer.CommandsExecutor;
  * @author rombus
  */
 public class ModeManager {
+    private enum Mode {LIVE_MODE, CALENDAR_MODE};
+    private static Mode curMode;
     private static ModeManager instance;
     private final CalendarMode calendarMode;
     private final Logger logger;
@@ -42,6 +44,7 @@ public class ModeManager {
             scheduler,
             logger
         );
+        curMode = Mode.CALENDAR_MODE; // Defaults to calendar mode
     }
 
     /**
@@ -64,15 +67,20 @@ public class ModeManager {
      * Call this method when a change on the calendar playlist has been done.
      */
     public void notifyCalendarChange(){
-        Thread t = new Thread(calendarMode);
-        t.start();
+        if(curMode == Mode.CALENDAR_MODE){
+            Thread t = new Thread(calendarMode);
+            t.start();
+        }
     }
 
     public void changeToCalendarMode(){
+        curMode = Mode.CALENDAR_MODE;
+        calendarMode.startOnFirstClipBeforeNow(false);
         notifyCalendarChange();
     }
 
     public void changeToLiveMode(ArrayList<Clip> clips){
+        curMode = Mode.LIVE_MODE;
         calendarMode.switchToLiveMode(clips);
     }
 }
