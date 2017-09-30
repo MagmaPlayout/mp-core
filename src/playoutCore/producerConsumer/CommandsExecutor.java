@@ -174,4 +174,11 @@ public class CommandsExecutor implements Runnable {
     public String getCurClipPath(){
         return pccpFactory.getCommand("USTA").executeForResponse(meltedCmdFactory).get("path").getAsString();
     }
+
+    public void startSequenceTransaction(){
+        meltedProxy.startSequenceTransaction();
+    }
+    public void endSequenceTransaction(){
+        meltedProxy.endSequenceTransaction();
+    }
 }

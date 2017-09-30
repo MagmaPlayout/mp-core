@@ -19,7 +19,6 @@ import static org.quartz.TriggerBuilder.newTrigger;
 import playoutCore.calendar.dataStore.MPPlayoutCalendarApi;
 import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.dataStructures.Clip;
-import playoutCore.meltedProxy.MeltedProxy;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.pccp.PccpFactory;
@@ -62,7 +61,7 @@ public class CalendarMode implements Runnable{
         running = true;
 
         cmdExecutor.interruptMeltedProxyWorker();
-        MeltedProxy.activeSequenceTransaction = true;
+        cmdExecutor.startSequenceTransaction();
 
         ArrayList<PccpCommand> commands = new ArrayList<>(); // Here is where all the commands will be, the APND commands and any other needed
         ArrayList<Occurrence> occurrences = api.getAllOccurrences();    // This get's the playlist from the DB
@@ -140,18 +139,20 @@ public class CalendarMode implements Runnable{
             }
         }
 
-        int curPos = 1;
-        for(Occurrence cur:occurrences){
-            commands.add(pccpFactory.getAPNDFromOccurrence(cur, curPos++));
+        int length = occurrences.size();
+        for(int i=0; i<length; i++){
+            Occurrence cur = occurrences.get(i);
+            PccpCommand cmd = pccpFactory.getAPNDFromOccurrence(cur, ++i);
+            cmd = setSequenceTransactionStatus(i, length, cmd);
+            commands.add(cmd);
         }
 
         logger.log(Level.INFO, "CalendarMode - addPccpCmdsToExecute");
         cmdExecutor.addPccpCmdsToExecute(commands);
-
-        logger.log(Level.INFO, "CalendarMode - CalendarMode thread finished");
-        running = false;
-        MeltedProxy.activeSequenceTransaction = false;
         cmdExecutor.tellMeltedProxyToTryNow(); // Run again so that MeltedProxy fills the list with default media
+        
+        running = false;
+        logger.log(Level.INFO, "CalendarMode - CalendarMode thread finished");
     }
 
 

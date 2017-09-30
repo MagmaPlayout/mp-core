@@ -146,15 +146,6 @@ public class MeltedProxy {
         }
     }
 
-    /**
-     * Call this method when melted's playlist changes by removing clips.
-     */
-    @Deprecated
-    public void meltedPlChanged(){
-        // TODO: ver como hacemos acá
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
     public void meltedDisconnected(){
         // TODO: frenar el scheduleo por comandos, y armar el método contraparte de meltedConnected();
         throw new UnsupportedOperationException("Not supported yet.");
