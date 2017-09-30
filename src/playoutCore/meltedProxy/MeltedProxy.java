@@ -16,7 +16,6 @@ import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.pccp.PccpFactory;
-import playoutCore.pccp.commands.PccpAPND;
 
 /**
  * This class handles when to send APND commands to Melted.
@@ -34,7 +33,8 @@ public class MeltedProxy {
     private final int plMaxDurationSeconds;
     private LocalDateTime plEndTimestamp;
     private final MvcpCmdFactory meltedCmdFactory;
-    private final ConcurrentLinkedQueue<PccpAPND> commandsQueue;
+    private final ConcurrentLinkedQueue<PccpCommand> commandsQueue;
+    private final ScheduledExecutorService periodicAppenderWorker;
     private final ScheduledExecutorService appenderWorker;
     private final Runnable appenderWorkerRunnable;
     private static boolean appenderRunning = false;
@@ -42,7 +42,7 @@ public class MeltedProxy {
     private static boolean blockMelted = false;
     private String spacersPath;
     private ZonedDateTime startingTime;
-    public static boolean calendarMode = false;
+    public static boolean activeSequenceTransaction = false;
 
     public MeltedProxy(int meltedPlaylistMaxDuration, MvcpCmdFactory meltedCmdFactory, PccpFactory pccpFactory, int appenderWorkerFreq, Logger logger){
         this.logger = logger;
@@ -52,7 +52,8 @@ public class MeltedProxy {
         spacersPath = ConfigurationManager.getInstance().getMltSpacersPath();
 
         // Creates the
-        appenderWorker = Executors.newSingleThreadScheduledExecutor();
+        periodicAppenderWorker = Executors.newSingleThreadScheduledExecutor();
+        appenderWorker = Executors.newScheduledThreadPool(5);
         appenderWorkerRunnable = new Runnable() {
             @Override
             public void run() {
@@ -65,12 +66,24 @@ public class MeltedProxy {
                     logger.log(Level.INFO, "MeltedProxy - commandsQueue locked. continue...");
                     return;
                 }
-                
+
                 if(!appenderRunning){
                     appenderRunning = true;
                     try{
                         if(!commandsQueue.isEmpty()){
-                            PccpAPND cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
+                            PccpCommand cmd = commandsQueue.peek(); // Get's the first element of the FIFO queue (doesn't remove it from the Q)
+
+                            switch(cmd.sequenceModifier){
+                                case START_SEQ:
+                                    logger.log(Level.INFO, "MeltedProxy - implicitly STARTING sequence transaction");
+                                    activeSequenceTransaction = true;
+                                    break;
+                                case END_SEQ:
+                                    logger.log(Level.INFO, "MeltedProxy - implicitly ENDING sequence transaction");
+                                    activeSequenceTransaction = false;
+                                    break;
+                            }
+
                             boolean executed = tryToExecute(cmd);
                             if(executed){
                                 logger.log(Level.INFO, "  MeltedProxy - Apended a clip.");// Now will see if another one can be appended as well...");
@@ -78,7 +91,7 @@ public class MeltedProxy {
                                 tryAgain = true;
                             }
 
-                        } else if (!calendarMode){
+                        } else if (!activeSequenceTransaction){
                             logger.log(Level.INFO, "  MeltedProxy - Check to see if I can fit a default media.");
                             // See if I can fit in a default media
                             Occurrence oc = SpacerGenerator.getInstance().generateImageSpacer(null, null, Duration.of(30, ChronoUnit.MINUTES)); //TODO make this length configurable
@@ -98,10 +111,10 @@ public class MeltedProxy {
                     logger.log(Level.INFO, "  MeltedProxy - Tried to run but already running!!");
                 }
 
-                // Runs again to see if another clip can be added (real or default)
-                if(tryAgain){
+                // Runs again to see if another clip can be added (real or default) or if a sequence transaction is not ended
+                if(tryAgain || activeSequenceTransaction){
                     logger.log(Level.INFO, "  MeltedProxy - Trying the execution again! check if you see duplicates here.");
-                    appenderWorkerRunnable.run();
+                    appenderWorker.schedule(appenderWorkerRunnable, 50, TimeUnit.MILLISECONDS); // Run again in a little while
                     //TODO: kill appenderWorker scheduledAtFixedRate
                     // appenderWorker.shutdown();
                 } else {
@@ -112,7 +125,7 @@ public class MeltedProxy {
         };
 
         // Makes the appenderWorker to run each appenderWorkerFreq minutes and by this assuring that melted always has something to play
-        appenderWorker.scheduleAtFixedRate(appenderWorkerRunnable, 1, appenderWorkerFreq, TimeUnit.MINUTES);
+        periodicAppenderWorker.scheduleAtFixedRate(appenderWorkerRunnable, 1, appenderWorkerFreq, TimeUnit.MINUTES);
     }
 
     /**
@@ -129,7 +142,7 @@ public class MeltedProxy {
      *
      * @param cmd
      */
-    public void execute(PccpAPND cmd){
+    public void execute(PccpCommand cmd){
         commandsQueue.add(cmd);
 
         if(plEndTimestamp == null){ // If the list is empty, try to make the execution now
@@ -161,7 +174,7 @@ public class MeltedProxy {
      * @param cmd first in the FIFO of queued commands
      * @return true if execution was succesful; false otherwise (not executed or executed with failure).
      */
-    private boolean tryToExecute(PccpAPND cmd){
+    private boolean tryToExecute(PccpCommand cmd){
         boolean executed = false;
 
         LocalDateTime nowLDT = LocalDateTime.now();
@@ -232,7 +245,7 @@ public class MeltedProxy {
     /**
      * Must use this when a schedule goto command is issued.
      * It's needed to calculate the plEndTimestamp correctly
-     * 
+     *
      * @param startTime
      */
     public void setScheduledStartingTime(ZonedDateTime startTime){
@@ -242,13 +255,19 @@ public class MeltedProxy {
     /**
      * This allows to block the commandsQueue while inserting all calendar occurrences.
      * This way the worker won't do anything until the queue is released.
-     * 
+     *
      * @param doBlock
      */
     public void blockQueue(boolean doBlock){
         this.blockQueue = doBlock;
     }
 
+    /**
+     * el startSequenceTransaction depreca al blockMelted
+     * @param doBlock
+     * @deprecated
+     */
+    @Deprecated
     public void blockMelted(boolean doBlock){
         this.blockMelted = doBlock;
     }
@@ -257,12 +276,21 @@ public class MeltedProxy {
         return this.blockMelted;
     }
 
+    public void startSequenceTransaction(){
+        logger.log(Level.INFO, "MeltedProxy - explicitly STARTING sequence transaction");
+        this.activeSequenceTransaction = true;
+    }
+    public void endSequenceTransaction(){
+        logger.log(Level.INFO, "MeltedProxy - explicitly ENDING a sequence transaction");
+        this.activeSequenceTransaction = false;
+    }
+
     /**
      * Stops the execution of the appenderWorkerThread and resets the blockQueue and blockMelted flags.
      * This is called when the CalendarMode wants to run.
      */
     public void interruptAppenderThread(){
-        appenderWorker.shutdownNow();
+        periodicAppenderWorker.shutdownNow();
         blockQueue(false);
         blockMelted(false);
     }

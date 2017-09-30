@@ -17,14 +17,22 @@ import playoutCore.mvcp.MvcpCmdFactory;
  * @author rombus
  */
 public abstract class PccpCommand {
+    public enum Sequence {
+        START_SEQ,  // A commands sequence starts with this command
+        END_SEQ,    // The sequence ends with this command
+        NO_MODIFIER // No modification to the sequence status is made (default value)
+    };
+    
+    public Sequence sequenceModifier;
     public JsonObject args;
 
     public PccpCommand(){
-        
+        this.sequenceModifier = Sequence.NO_MODIFIER;
     }
     
     public PccpCommand(JsonObject args){
         this.args = args;
+        this.sequenceModifier = Sequence.NO_MODIFIER;
     }
 
     public void setArgs(JsonObject args){

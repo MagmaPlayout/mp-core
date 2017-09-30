@@ -56,7 +56,8 @@ public class CommandsExecutor implements Runnable {
                     // In the future, any other command added that adds medias to melted
                     // should be taken into account here.
                     // MeltedProxy makes sure that melted's playlist doesn't get overloaded
-                    meltedProxy.execute((PccpAPND)cmd);
+                    meltedProxy.execute(cmd);
+                    logger.log(Level.INFO, "CommandsExecutor - Queuing a PccpAPND on meltedProxy's list");
                 }
                 else if(cmd instanceof PccpGETPL){ //TODO: make this distinction more abstract
                         JsonObject response = cmd.executeForResponse(meltedCmdFactory);
@@ -67,7 +68,7 @@ public class CommandsExecutor implements Runnable {
                 }
             } catch (InterruptedException e) {
                 keepRunning = false;
-                logger.log(Level.INFO, "Playout Core - Shutting down CommandsExecutor thread.");
+                logger.log(Level.INFO, "CommandsExecutor - Shutting down CommandsExecutor thread.");
             }
         }
     }
@@ -85,8 +86,8 @@ public class CommandsExecutor implements Runnable {
             commandQueue.add(cmd);
         }
         // Once I finish blocking the queue I tryToExecute all it's commands right away
-        meltedProxy.tryToExecuteNow();
         meltedProxy.blockQueue(false);
+        meltedProxy.tryToExecuteNow();
     }
 
     public void interruptMeltedProxyWorker(){
@@ -144,6 +145,7 @@ public class CommandsExecutor implements Runnable {
      * Cleans MeltedProxy's list and Melted's playlist.
      */
     public void cleanProxyAndMeltedLists(){
+        meltedProxy.startSequenceTransaction();
         meltedProxy.cleanAll();
         pccpFactory.getCommand("CLEAN").execute(meltedCmdFactory);
     }

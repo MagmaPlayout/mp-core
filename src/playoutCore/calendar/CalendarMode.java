@@ -63,7 +63,7 @@ public class CalendarMode implements Runnable{
 
         cmdExecutor.interruptMeltedProxyWorker();
         cmdExecutor.blockMelted(true);
-        MeltedProxy.calendarMode = true;
+        MeltedProxy.activeSequenceTransaction = true;
 
         ArrayList<PccpCommand> commands = new ArrayList<>(); // Here is where all the commands will be, the APND commands and any other needed
         ArrayList<Occurrence> occurrences = api.getAllOccurrences();    // This get's the playlist from the DB
@@ -151,7 +151,7 @@ public class CalendarMode implements Runnable{
 
         logger.log(Level.INFO, "CalendarMode - CalendarMode thread finished");
         running = false;
-        MeltedProxy.calendarMode = false;
+        MeltedProxy.activeSequenceTransaction = false;
         cmdExecutor.tellMeltedProxyToTryNow(); // Run again so that MeltedProxy fills the list with default media
     }
 
@@ -226,13 +226,43 @@ public class CalendarMode implements Runnable{
         commingFromLiveMode = true; // I set this flag in advance here
 
         ArrayList<PccpCommand> commands = new ArrayList<>();
-        for(Clip cur:clips){
-            commands.add(pccpFactory.getAPNDFromClip(cur));
+        int length = clips.size();
+        for(int i=0; i<length; i++){
+            Clip cur = clips.get(i);
+            PccpCommand cmd = pccpFactory.getAPNDFromClip(cur);
+            cmd = setSequenceTransactionStatus(i, length, cmd);
+            commands.add(cmd);
         }
-
+        
         cmdExecutor.blockMelted(false);
         if(!commands.isEmpty()){
             cmdExecutor.addPccpCmdsToExecute(commands);
         }
+    }
+
+    /**
+     * Set's the sequenceModifier for the specified PccpCommand.
+     * If it's the first in the array it'll be START_SEQ, if it's the last END_SEQ, otherwise it'll be NO_MODIFIER.
+     *
+     * @param i index of this PccpCommand on a sequence
+     * @param length length of the sequence
+     * @param cmd current command to set it's sequenceModifier
+     * @return returns cmd
+     */
+    private PccpCommand setSequenceTransactionStatus(int i, int length, PccpCommand cmd){
+        // If it's the last (even if it's the first and also the last), mark it as END_SEQ.
+        if (i==length-1){
+            cmd.sequenceModifier = PccpCommand.Sequence.END_SEQ;
+        }
+        // If it's the first, mark it as START_SEQ
+        else if(i==0){
+            cmd.sequenceModifier = PccpCommand.Sequence.START_SEQ;
+        }
+        // Set's the default sequenceModifier
+        else {
+            cmd.sequenceModifier = PccpCommand.Sequence.NO_MODIFIER;
+        }
+
+        return cmd;
     }
 }
