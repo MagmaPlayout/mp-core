@@ -39,7 +39,6 @@ public class MeltedProxy {
     private final Runnable appenderWorkerRunnable;
     private static boolean appenderRunning = false;
     private static boolean blockQueue = false;
-    private static boolean blockMelted = false;
     private String spacersPath;
     private ZonedDateTime startingTime;
     public static boolean activeSequenceTransaction = false;
@@ -59,10 +58,7 @@ public class MeltedProxy {
             public void run() {
                 boolean tryAgain = false;
 //                logger.log(Level.INFO, "MeltedProxy - !!!---!!! MeltedProxy Worker running.");
-                if(blockMelted){
-                    logger.log(Level.INFO, "MeltedProxy - melted locked. continue...");
-                    return;
-                }else if(blockQueue){
+                if(blockQueue){
                     logger.log(Level.INFO, "MeltedProxy - commandsQueue locked. continue...");
                     return;
                 }
@@ -259,20 +255,16 @@ public class MeltedProxy {
      * @param doBlock
      */
     public void blockQueue(boolean doBlock){
-        this.blockQueue = doBlock;
-    }
-
-    public boolean isMeltedBloqued(){
-        return this.blockMelted;
+        MeltedProxy.blockQueue = doBlock;
     }
 
     public void startSequenceTransaction(){
         logger.log(Level.INFO, "MeltedProxy - explicitly STARTING sequence transaction");
-        this.activeSequenceTransaction = true;
+        MeltedProxy.activeSequenceTransaction = true;
     }
     public void endSequenceTransaction(){
         logger.log(Level.INFO, "MeltedProxy - explicitly ENDING a sequence transaction");
-        this.activeSequenceTransaction = false;
+        MeltedProxy.activeSequenceTransaction = false;
     }
 
     /**
