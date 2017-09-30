@@ -46,6 +46,7 @@ public class CalendarApi implements MPPlayoutCalendarApi {
         try {
             JSONArray jsonOccurrences = resty.json(baseUrl+OCCURRENCES_PATH).array();
             int len = jsonOccurrences.length();
+            ZonedDateTime now = ZonedDateTime.now();
 
             // Iterate over every occurrence creating Occurrence objects
             for(int i=0; i<len; i++){
@@ -61,15 +62,18 @@ public class CalendarApi implements MPPlayoutCalendarApi {
                     // TODO: tirar una excepción controlada, no una runtime y ver mejor como handlear esta situacion
                     throw new RuntimeException("No path or duration");
                 }
-                
-                occurrences.add(
-                    new Occurrence(
-                        startDateTime, endDateTime,
-                        piece.getString(JsonOccurrence.PATH_KEY),
-                        duration, piece.getInt(JsonOccurrence.FRAME_LEN_KEY),
-                        piece.getInt(JsonOccurrence.FPS_KEY)
-                    )
-                );
+
+                // If the media ended after now, there's no point on adding it to the occurrences list
+                if(endDateTime.isAfter(now)){
+                    occurrences.add(
+                        new Occurrence(
+                            startDateTime, endDateTime,
+                            piece.getString(JsonOccurrence.PATH_KEY),
+                            duration, piece.getInt(JsonOccurrence.FRAME_LEN_KEY),
+                            piece.getInt(JsonOccurrence.FPS_KEY)
+                        )
+                    );
+                }
             }
             
         } catch (IOException ex) {

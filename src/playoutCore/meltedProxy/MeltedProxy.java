@@ -10,7 +10,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import libconfig.ConfigurationManager;
 import playoutCore.calendar.SpacerGenerator;
 import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.mvcp.MvcpCmdFactory;
@@ -37,7 +36,6 @@ public class MeltedProxy {
     private final ScheduledExecutorService appenderWorker;
     private final Runnable appenderWorkerRunnable;
     private static boolean appenderRunning = false;
-    private String spacersPath;
     private ZonedDateTime startingTime;
     public static boolean activeSequenceTransaction = false;
 
@@ -46,7 +44,6 @@ public class MeltedProxy {
         this.meltedCmdFactory = meltedCmdFactory;
         this.plMaxDurationSeconds = meltedPlaylistMaxDuration * 60; // meltedPlaylistMaxDuration is in minutes
         commandsQueue = new ConcurrentLinkedQueue();    // TODO: this list must be emptied when a CLEARALL command is issued
-        spacersPath = ConfigurationManager.getInstance().getMltSpacersPath();
 
         // Creates the
         periodicAppenderWorker = Executors.newSingleThreadScheduledExecutor();
@@ -55,8 +52,6 @@ public class MeltedProxy {
             @Override
             public void run() {
                 boolean tryAgain = false;
-//                logger.log(Level.INFO, "MeltedProxy - !!!---!!! MeltedProxy Worker running.");
-
 
                 if(!appenderRunning){
                     appenderRunning = true;
