@@ -1,10 +1,8 @@
 package playoutCore;
 
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import playoutCore.calendar.SpacerGenerator;
-import playoutCore.calendar.dataStructures.Occurrence;
+import playoutCore.modeSwitcher.ModeManager;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.pccp.PccpFactory;
 import playoutCore.producerConsumer.CommandsExecutor;
@@ -35,21 +33,10 @@ public class ContentLoader {
      *
      */
     public void loadSavedClips(){
+        ModeManager.getInstance().changeToCalendarMode();
+
         ArrayList<PccpCommand> commands = new ArrayList<>();
-        PccpCommand playCmd = pccpFactory.getCommand("PLAY");
-
-        // TODO: pedir a la BD los medias cargados
-        // calcular la fecha actual y la del comienzo de la lista
-        // para determinar que cargar y que no, incluyendo el número de frame
-
-        // if( no hay medias en la bd) {
-        Occurrence oc = spacerGen.generateImageSpacer(null, null, Duration.of(4, ChronoUnit.MINUTES));
-        PccpCommand cmd = pccpFactory.getAPNDFromOccurrence(oc, 0);
-        commands.add(cmd);
-        // }
-
-
-        commands.add(playCmd);
+        commands.add(pccpFactory.getCommand("PLAY"));
         executor.addPccpCmdsToExecute(commands);
         executor.tellMeltedProxyToTryNow();
     }

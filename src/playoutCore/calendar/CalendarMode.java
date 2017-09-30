@@ -39,7 +39,7 @@ public class CalendarMode implements Runnable{
     private final SpacerGenerator spacerGen;
     private final CommandsExecutor cmdExecutor;
     private final Scheduler scheduler;
-    private boolean commingFromLiveMode = false;
+    private boolean tolerateInBetween = true;
     private static boolean running = false;
 
     public CalendarMode(MPPlayoutCalendarApi api, MvcpCmdFactory mvcpFactory, PccpFactory pccpFactory, CommandsExecutor cmdExecutor, Scheduler scheduler, Logger logger) {
@@ -63,11 +63,11 @@ public class CalendarMode implements Runnable{
         cmdExecutor.interruptMeltedProxyWorker();
         cmdExecutor.startSequenceTransaction();
 
-        ArrayList<PccpCommand> commands = new ArrayList<>(); // Here is where all the commands will be, the APND commands and any other needed
+        ArrayList<PccpCommand> commands = new ArrayList<>();            // Here is where all the commands will be, the APND commands and any other needed
         ArrayList<Occurrence> occurrences = api.getAllOccurrences();    // This get's the playlist from the DB
 
-        int startingFrame = removeOldClips(occurrences, commingFromLiveMode);
-        if(commingFromLiveMode) commingFromLiveMode = false;
+        int startingFrame = removeOldClips(occurrences, tolerateInBetween);
+        // if(commingFromLiveMode) commingFromLiveMode = false; //TODO: I'll tolerate inbetweens always. Until I find a good reason not to.
 
         // Takes the occurrences list and adds the spacers in the right places (if needed) [[BUT it doesn't add anything before the first occurrence]]
         occurrences = spacerGen.generateNeededSpacers(occurrences);
@@ -140,6 +140,11 @@ public class CalendarMode implements Runnable{
         }
 
         int length = occurrences.size();
+        if(length==0){
+            // This can happen when mp-core start's and tries to load saved occurrences, but there aren't any
+            cmdExecutor.endSequenceTransaction();
+        }
+        
         for(int i=0; i<length; i++){
             Occurrence cur = occurrences.get(i);
             PccpCommand cmd = pccpFactory.getAPNDFromOccurrence(cur, (i+1));
@@ -221,7 +226,7 @@ public class CalendarMode implements Runnable{
     public void switchToLiveMode(ArrayList<Clip> clips){
         // poner un goto acá o hacer un remove
         cleanProxyAndMeltedLists();
-        commingFromLiveMode = true; // I set this flag in advance here
+        tolerateInBetween = true; // I set this flag in advance here
 
         ArrayList<PccpCommand> commands = new ArrayList<>();
         int length = clips.size();
@@ -264,14 +269,13 @@ public class CalendarMode implements Runnable{
     }
 
     /**
-     * If doStart is true then a spacer will be played first until the first clip
-     * that starts before "now" start's playing.
-     * If false then it will start playing on the current frame of the supposedly current playing clip.
+     * Tolerate in between means that if a media is added and it's start time is before NOW
+     * but it's end time is after now, it will play in the exact frame of NOW.
+     * If false, such clip will be ignored.
      * 
-     * If doStart is false the playback might start playing from the middle of a clip.
-     * @param doStart
+     * @param tolerate
      */
-    public void startOnFirstClipBeforeNow(boolean doStart){
-        this.commingFromLiveMode = doStart;
+    public void setTolerateInBetween(boolean tolerate){
+        this.tolerateInBetween = tolerate;
     }
 }

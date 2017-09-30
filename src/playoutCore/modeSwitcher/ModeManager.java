@@ -75,7 +75,7 @@ public class ModeManager {
 
     public void changeToCalendarMode(){
         curMode = Mode.CALENDAR_MODE;
-        calendarMode.startOnFirstClipBeforeNow(false);
+        calendarMode.setTolerateInBetween(true);
         notifyCalendarChange();
     }
 
