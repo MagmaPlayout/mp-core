@@ -149,7 +149,6 @@ public class CalendarMode implements Runnable{
 
         logger.log(Level.INFO, "CalendarMode - addPccpCmdsToExecute");
         cmdExecutor.addPccpCmdsToExecute(commands);
-        cmdExecutor.tellMeltedProxyToTryNow(); // Run again so that MeltedProxy fills the list with default media
         
         running = false;
         logger.log(Level.INFO, "CalendarMode - CalendarMode thread finished");

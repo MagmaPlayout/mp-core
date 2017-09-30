@@ -38,7 +38,6 @@ public class MeltedProxy {
     private final ScheduledExecutorService appenderWorker;
     private final Runnable appenderWorkerRunnable;
     private static boolean appenderRunning = false;
-    private static boolean blockQueue = false;
     private String spacersPath;
     private ZonedDateTime startingTime;
     public static boolean activeSequenceTransaction = false;
@@ -58,10 +57,7 @@ public class MeltedProxy {
             public void run() {
                 boolean tryAgain = false;
 //                logger.log(Level.INFO, "MeltedProxy - !!!---!!! MeltedProxy Worker running.");
-                if(blockQueue){
-                    logger.log(Level.INFO, "MeltedProxy - commandsQueue locked. continue...");
-                    return;
-                }
+
 
                 if(!appenderRunning){
                     appenderRunning = true;
@@ -239,16 +235,6 @@ public class MeltedProxy {
         this.startingTime = startTime;
     }
 
-    /**
-     * This allows to block the commandsQueue while inserting all calendar occurrences.
-     * This way the worker won't do anything until the queue is released.
-     *
-     * @param doBlock
-     */
-    public void blockQueue(boolean doBlock){
-        MeltedProxy.blockQueue = doBlock;
-    }
-
     public void startSequenceTransaction(){
         logger.log(Level.INFO, "MeltedProxy - explicitly STARTING sequence transaction");
         MeltedProxy.activeSequenceTransaction = true;
@@ -264,6 +250,5 @@ public class MeltedProxy {
      */
     public void interruptAppenderThread(){
         periodicAppenderWorker.shutdownNow();
-        blockQueue(false);
     }
 }
