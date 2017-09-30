@@ -142,7 +142,7 @@ public class CalendarMode implements Runnable{
         int length = occurrences.size();
         for(int i=0; i<length; i++){
             Occurrence cur = occurrences.get(i);
-            PccpCommand cmd = pccpFactory.getAPNDFromOccurrence(cur, ++i);
+            PccpCommand cmd = pccpFactory.getAPNDFromOccurrence(cur, (i+1));
             cmd = setSequenceTransactionStatus(i, length, cmd);
             commands.add(cmd);
         }
