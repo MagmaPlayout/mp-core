@@ -224,7 +224,7 @@ public class CalendarMode implements Runnable{
     }
 
     public void switchToLiveMode(ArrayList<Clip> clips){
-        // poner un goto acá o hacer un remove
+        // TODO: poner un goto acá o hacer un remove
         cleanProxyAndMeltedLists();
         tolerateInBetween = true; // I set this flag in advance here
 
@@ -238,6 +238,11 @@ public class CalendarMode implements Runnable{
         }
         
         if(!commands.isEmpty()){
+            // Add a remove first so that it start's playing this list right away
+            PccpCommand remove = pccpFactory.getCommand("REMOVE");
+            remove.sequenceModifier = PccpCommand.Sequence.START_SEQ;
+            commands.add(0, remove);
+
             cmdExecutor.addPccpCmdsToExecute(commands);
         }
     }

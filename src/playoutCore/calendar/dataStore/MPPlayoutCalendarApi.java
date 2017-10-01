@@ -10,5 +10,4 @@ import playoutCore.calendar.dataStructures.Occurrence;
  */
 public interface MPPlayoutCalendarApi {
     ArrayList<Occurrence> getAllOccurrences();
-    //TODO: en la api un método que sea delAllSpacers ?
 }

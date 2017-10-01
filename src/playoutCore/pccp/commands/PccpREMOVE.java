@@ -3,6 +3,7 @@ package playoutCore.pccp.commands;
 import com.google.gson.JsonObject;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import meltedBackend.commands.MeltedCmd;
 import meltedBackend.common.MeltedCommandException;
 import meltedBackend.responseParser.responses.GenericResponse;
 import org.quartz.Scheduler;
@@ -33,29 +34,27 @@ public class PccpREMOVE extends PccpCommand {
 
     @Override
     public boolean execute(MvcpCmdFactory factory) {
-        //TODO: validate args lenght, only accepts one clip, that is only one json object.
-        if(args == null){
-            logger.log(Level.SEVERE, "Playout Core - No arguments found for REMOVE PCCP command.");
-            return false;
-        }
-        Clip clip = getClipFromJsonArg(args.getAsJsonObject(PIECE_KEY));
-
-        //TODO hardcoded unit
-        String unit = "U0";
+        String unit = "U0"; //TODO hardcoded unit
         
         try {
-            GenericResponse r = factory.getRemove(unit, clip.playlistIdx).exec();
+            MeltedCmd removeCmd;
+            if(args != null){
+                Clip clip = getClipFromJsonArg(args.getAsJsonObject(PIECE_KEY));
+                removeCmd = factory.getRemove(unit, clip.playlistIdx);
+            }
+            else {
+                removeCmd = factory.getRemove(unit);
+            }
+            
+            GenericResponse r = removeCmd.exec();
 
             if(!r.cmdOk()){
-                logger.log(Level.WARNING, "Playout Core - Could not remove clip {0} Melted error: {1}. "
-                        + "Check the bash_timeout configuration key.", new Object[]{clip.path, r.getStatus()});
+                logger.log(Level.WARNING, "Playout Core - Could not remove clip. Melted error: "+r.getStatus()
+                        + "Check the bash_timeout configuration key.");
                 return false;
             }
 
-            if(clip.filterId != Clip.NO_FILTER){
-                // TODO: if the removed media had filters, remove it's scheduling
-            }
-            logger.log(Level.INFO, "Playout Core - Removed media: {0}", clip.path);
+            logger.log(Level.INFO, "Playout Core - Removed media");
         } catch (MeltedCommandException ex) {
             logger.log(Level.SEVERE, "Playout Core - An error occured during the execution of the REMOVE PCCP command. Possibly by a misconfigured melt path configuration");
             return false;

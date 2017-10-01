@@ -193,7 +193,6 @@ public class MeltedProxy {
         boolean status = cmd.execute(meltedCmdFactory);
         if(status){
             // Add apended clip length to the plEndTimestamp
-            //TODO: asumo que melted está en modo play
             if(startingTime != null){
                 plEndTimestamp = startingTime.toLocalDateTime();
                 startingTime = null;
