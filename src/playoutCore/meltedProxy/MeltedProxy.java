@@ -241,6 +241,6 @@ public class MeltedProxy {
      * This is called when the CalendarMode wants to run.
      */
     public void interruptAppenderThread(){
-        periodicAppenderWorker.shutdownNow();
+//        periodicAppenderWorker.shutdownNow();
     }
 }
