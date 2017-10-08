@@ -12,6 +12,7 @@ import playoutCore.modeSwitcher.ModeManager;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import playoutCore.pccp.PccpFactory;
+import playoutCore.playoutApi.PlayoutApi;
 import playoutCore.producerConsumer.CommandsExecutor;
 import playoutCore.producerConsumer.CommandsListener;
 import playoutCore.scheduler.SchedulerJobFactory;
@@ -40,6 +41,9 @@ public class PlayoutCore {
         // Prints loaded configuration
         cfg.printConfig(logger);
 
+        // Initializes the mp-playout-api rest module
+        PlayoutApi.init(ConfigurationManager.getInstance().getRestBaseUrl(), logger);
+        
         // Commands Queue
         ArrayBlockingQueue<PccpCommand> commandsQueue = new ArrayBlockingQueue(100, true);
 

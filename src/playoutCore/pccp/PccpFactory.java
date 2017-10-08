@@ -7,6 +7,7 @@ import org.quartz.Scheduler;
 import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.dataStructures.Clip;
 import playoutCore.pccp.commands.PccpAPND;
+import playoutCore.pccp.commands.PccpAPPLYFILTER;
 import playoutCore.pccp.commands.PccpCALCHANGE;
 import playoutCore.pccp.commands.PccpCLEAN;
 import playoutCore.pccp.commands.PccpCLEARALL;
@@ -61,6 +62,7 @@ public class PccpFactory {
         CALCHANGE,  // A change to the calendar schedule has been issued
         USTA,       // Useful to get information about the playing clip
         SWITCHMODE, // Changes from live mode to calendar mode and viceversa
+        APPLYFILTER,// Creates a piece (.mlt) with the specified filter
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id
@@ -120,6 +122,9 @@ public class PccpFactory {
                         break;
                     case SWITCHMODE:
                         cmd = new PccpSWITCHMODE(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case APPLYFILTER:
+                        cmd = new PccpAPPLYFILTER(args, publisher, fscpChannel, scheduler, logger);
                         break;
                 }
 

@@ -16,7 +16,6 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleTrigger;
 import static org.quartz.TriggerBuilder.newTrigger;
-import playoutCore.calendar.dataStore.MPPlayoutCalendarApi;
 import playoutCore.calendar.dataStructures.Occurrence;
 import playoutCore.dataStructures.Clip;
 import playoutCore.mvcp.MvcpCmdFactory;
@@ -24,6 +23,7 @@ import playoutCore.pccp.PccpCommand;
 import playoutCore.pccp.PccpFactory;
 import playoutCore.producerConsumer.CommandsExecutor;
 import playoutCore.scheduler.GotoSchedJob;
+import playoutCore.playoutApi.MPPlayoutApi;
 
 /**
  * This class executes the run() method when the calendar sends a CALCHANGE PCCP command.
@@ -35,14 +35,14 @@ public class CalendarMode implements Runnable{
     private final Logger logger;
     private final PccpFactory pccpFactory;
     private final MvcpCmdFactory mvcpFactory;
-    private final MPPlayoutCalendarApi api;
+    private final MPPlayoutApi api;
     private final SpacerGenerator spacerGen;
     private final CommandsExecutor cmdExecutor;
     private final Scheduler scheduler;
     private boolean tolerateInBetween = true;
     private static boolean running = false;
 
-    public CalendarMode(MPPlayoutCalendarApi api, MvcpCmdFactory mvcpFactory, PccpFactory pccpFactory, CommandsExecutor cmdExecutor, Scheduler scheduler, Logger logger) {
+    public CalendarMode(MPPlayoutApi api, MvcpCmdFactory mvcpFactory, PccpFactory pccpFactory, CommandsExecutor cmdExecutor, Scheduler scheduler, Logger logger) {
         this.logger = logger;
         this.api = api;
         this.pccpFactory = pccpFactory;

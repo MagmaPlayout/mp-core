@@ -1,13 +1,16 @@
-package playoutCore.calendar.dataStore;
+package playoutCore.playoutApi;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import playoutCore.calendar.dataStructures.JsonOccurrence;
 import playoutCore.calendar.dataStructures.Occurrence;
+import playoutCore.filter.dataStructures.Filter;
+import playoutCore.filter.dataStructures.JsonFilter;
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
@@ -20,18 +23,31 @@ import us.monoid.web.Resty;
  * 
  * @author rombus
  */
-public class CalendarApi implements MPPlayoutCalendarApi {
+public class PlayoutApi implements MPPlayoutApi {
     private static final String OCCURRENCES_PATH = "occurrences/";
+    private final String FILTER_ARGS_PATH = "filterArgs/";
+    private static PlayoutApi instance;
     private final String baseUrl;
     private final Resty resty;
     private final Logger logger;
 
-    public CalendarApi(String baseUrl, Logger logger){
+    public static void init(String baseUrl, Logger logger){
+        instance = new PlayoutApi(baseUrl, logger);
+    }
+    
+    public static PlayoutApi getInstance(){
+        if(instance == null){
+            throw new RuntimeException("PlayoutApi getInstance() - You need to call init() on PlayoutApi before calling getInstance()!");
+        }
+        
+        return instance;
+    }
+
+    private PlayoutApi(String baseUrl, Logger logger){
         this.resty = new Resty();
         this.logger = logger;
         this.baseUrl = baseUrl;
     }
-
 
     /**
      * Makes a rest get request to the OCCURRENCE_PATH of mp-playout-api to get all the configured occurrences.
@@ -87,5 +103,39 @@ public class CalendarApi implements MPPlayoutCalendarApi {
         }
         
         return occurrences;
+    }
+
+    
+    /**
+     * Makes a rest get request to the FILTER_ARGS_PATH of mp-playout-api to get all the key value filter arguments.
+     *
+     * @param filterId filter to search arguments
+     * @return the filter containing a Map with the key value arguments.
+     */
+    @Override
+    public Filter getFilterArguments(int filterId) {
+        Filter filter = new Filter();
+
+        try {
+            JSONArray jsonOccurrences = resty.json(baseUrl+FILTER_ARGS_PATH+filterId).array();
+            int len = jsonOccurrences.length();
+
+            // Iterate over every occurrence creating Occurrence objects
+            for(int i=0; i<len; i++){
+                JSONObject curArg = jsonOccurrences.getJSONObject(i);
+                String key = curArg.getString(JsonFilter.KEY);
+                String value = curArg.getString(JsonFilter.VALUE);
+
+                filter.addKeyValue(key, value);
+            }
+        } catch (IOException ex) {
+            //TODO: handle
+            Logger.getLogger(PlayoutApi.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (JSONException ex) {
+            //TODO: handle
+            Logger.getLogger(PlayoutApi.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return filter;
     }
 }
