@@ -25,7 +25,6 @@ import redis.clients.jedis.Jedis;
  * @author rombus
  */
 public class PccpAPPLYFILTER extends PccpCommand {
-
     private static final String FROM = "from";
     private static final String TO = "to";
     private static final String FILTER_ID = "filterId";
