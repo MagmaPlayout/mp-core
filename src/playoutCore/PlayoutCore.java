@@ -42,7 +42,7 @@ public class PlayoutCore {
         cfg.printConfig(logger);
 
         // Initializes the mp-playout-api rest module
-        PlayoutApi.init(ConfigurationManager.getInstance().getRestBaseUrl(), logger);
+        PlayoutApi.init(ConfigurationManager.getInstance().getPlayoutAPIRestBaseUrl(), logger);
         
         // Commands Queue
         ArrayBlockingQueue<PccpCommand> commandsQueue = new ArrayBlockingQueue(100, true);
