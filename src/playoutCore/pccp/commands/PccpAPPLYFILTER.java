@@ -28,6 +28,7 @@ public class PccpAPPLYFILTER extends PccpCommand {
     private static final String FROM = "from";
     private static final String TO = "to";
     private static final String FILTER_ID = "filterId";
+    private static final String PIECE_ID = "pieceId";
     private final Logger logger;
 
     public PccpAPPLYFILTER(JsonObject args, Jedis publisher, String fscpChannel, Scheduler scheduler, Logger logger) {
@@ -45,6 +46,7 @@ public class PccpAPPLYFILTER extends PccpCommand {
             String fromPath = args.getAsJsonPrimitive(FROM).toString().replace("\"", "");
             String toPath = args.getAsJsonPrimitive(TO).toString().replace("\"", "");
             int filterId = args.getAsJsonPrimitive(FILTER_ID).getAsInt();
+            int pieceId = args.getAsJsonPrimitive(PIECE_ID).getAsInt();
 
             Filter filter = api.getFilterArguments(filterId);
             StringBuffer filtersXmlString = getFiltersXmlString(filter);
@@ -57,6 +59,11 @@ public class PccpAPPLYFILTER extends PccpCommand {
             List<String> lines = Files.readAllLines(Paths.get(fromPath));
             boolean insideTractorTag = false;
             for(String line: lines){
+                // Set's the title attribute to be the pieceId
+                if(line.contains("<mlt ")){
+                    line = line.replaceFirst("(title=)[\"][\\S]*[\"]", "title=\""+String.valueOf(pieceId)+"\"");
+                }
+
                 // If you're inside the tractor tag, then it's time to print the filters
                 if(insideTractorTag){
                     insideTractorTag = false;
