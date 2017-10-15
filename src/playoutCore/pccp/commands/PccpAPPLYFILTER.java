@@ -61,7 +61,7 @@ public class PccpAPPLYFILTER extends PccpCommand {
             for(String line: lines){
                 // Set's the title attribute to be the pieceId
                 if(line.contains("<mlt ")){
-                    line = line.replaceFirst("(title=)[\"][\\S]*[\"]", "title=\""+String.valueOf(pieceId)+"\"");
+                    line = line.replaceFirst("title=[\"][\\S]*[\"]", "title=\""+String.valueOf(pieceId)+"\"");
                 }
 
                 // If you're inside the tractor tag, then it's time to print the filters
