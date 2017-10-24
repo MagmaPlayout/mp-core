@@ -72,7 +72,7 @@ public class MeltedProxy {
 
                             boolean executed = tryToExecute(cmd);
                             if(executed){
-                                logger.log(Level.INFO, "  MeltedProxy - Apended a clip.");// Now will see if another one can be appended as well...");
+                                logger.log(Level.INFO, "  MeltedProxy - Appended a clip.");// Now will see if another one can be appended as well...");
                                 commandsQueue.poll();   // Removes the first element from the FIFO queue
                                 tryAgain = true;
                             }

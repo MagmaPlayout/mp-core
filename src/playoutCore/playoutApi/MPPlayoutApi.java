@@ -12,5 +12,5 @@ import playoutCore.filter.dataStructures.Filter;
  */
 public interface MPPlayoutApi {
     ArrayList<Occurrence> getAllOccurrences();
-    Filter getFilterArguments(int filterId);
+    @Deprecated Filter getFilterArguments(String filterName, int filterId);
 }
