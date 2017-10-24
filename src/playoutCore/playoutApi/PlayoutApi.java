@@ -5,12 +5,9 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import playoutCore.calendar.dataStructures.JsonOccurrence;
 import playoutCore.calendar.dataStructures.Occurrence;
-import playoutCore.filter.dataStructures.Filter;
-import playoutCore.filter.dataStructures.JsonFilteredPiece;
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
@@ -25,7 +22,6 @@ import us.monoid.web.Resty;
  */
 public class PlayoutApi implements MPPlayoutApi {
     private static final String OCCURRENCES_PATH = "occurrences/";
-    @Deprecated private final String FILTER_ARGS_PATH = "filterArgs/";
     
     private static PlayoutApi instance;
     private final String baseUrl;
@@ -104,42 +100,5 @@ public class PlayoutApi implements MPPlayoutApi {
         }
         
         return occurrences;
-    }
-
-    
-    /**
-     * Makes a rest get request to the FILTER_ARGS_PATH of mp-playout-api to get all the key value filter arguments.
-     *
-     * @param filterName the value for the "mlt_service" key
-     * @param filterArgsId filterArgsId to search arguments
-     * @return the filter containing a Map with the key value arguments.
-     */
-    @Override
-    @Deprecated
-    public Filter getFilterArguments(String filterName, int filterArgsId) {
-        Filter filter = new Filter();
-        filter.addKeyValue("mlt_service", filterName); // The most important argument, defines what filter is it.
-
-        try {
-            JSONArray jsonOccurrences = resty.json(baseUrl+FILTER_ARGS_PATH+filterArgsId).array();
-            int len = jsonOccurrences.length();
-
-            // Iterate over every occurrence creating Occurrence objects
-            for(int i=0; i<len; i++){
-                JSONObject curArg = jsonOccurrences.getJSONObject(i);
-                String key = curArg.getString(JsonFilteredPiece.KEY);
-                String value = curArg.getString(JsonFilteredPiece.VALUE);
-
-                filter.addKeyValue(key, value);
-            }
-        } catch (IOException ex) {
-            //TODO: handle
-            Logger.getLogger(PlayoutApi.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (JSONException ex) {
-            //TODO: handle
-            Logger.getLogger(PlayoutApi.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        return filter;
     }
 }

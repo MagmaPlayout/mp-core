@@ -2,7 +2,6 @@ package playoutCore.playoutApi;
 
 import java.util.ArrayList;
 import playoutCore.calendar.dataStructures.Occurrence;
-import playoutCore.filter.dataStructures.Filter;
 
 /**
  * Interface to mp-playout-api rest module.
@@ -12,5 +11,4 @@ import playoutCore.filter.dataStructures.Filter;
  */
 public interface MPPlayoutApi {
     ArrayList<Occurrence> getAllOccurrences();
-    @Deprecated Filter getFilterArguments(String filterName, int filterId);
 }
