@@ -10,9 +10,12 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
@@ -145,28 +148,38 @@ public class PccpAPPLYFILTER extends PccpCommand {
     private FilterPiece parseFilters(FilterPiece piece, JsonObject pieceObj) {
         //TODO reemplazar todos los JSONArray y JSONObject por JsonArray y JsonObject, así uso gson
         // Parse Filters
-        JsonArray filtersArr = pieceObj.getAsJsonArray(JsonFilteredPiece.FILTERS);
+        TreeMap<Integer, Filter> orderedFilters = new TreeMap<>(); // Temp Map for storing filters while loading their arguments
+        
+        JsonArray filtersArr = pieceObj.getAsJsonArray(JsonFilteredPiece.FILTER_CONFIGS); // Array<FilterConfigModel>
+        // Iterate over all the filterArgs and group them by filterIndex into the "orderedFilters" variable
         for(JsonElement filterElemen:filtersArr){
             JsonObject filterObj = filterElemen.getAsJsonObject();
-
-            Filter curFilter = new Filter();
-            curFilter.filterId = filterObj.get(JsonFilteredPiece.ID).getAsInt();
-            curFilter.name = filterObj.get(JsonFilteredPiece.FILTER_NAME).getAsString();
-
-            curFilter.addKeyValue("mlt_service", curFilter.name); // The first key-value is the filter identifier.
             
-            // Parse filter Arguments
-            JsonArray filterArgsArr = filterObj.getAsJsonArray(JsonFilteredPiece.FILTER_ARGS);
-            for(JsonElement filterArg:filterArgsArr){
-                JsonObject filterArgObj = filterArg.getAsJsonObject();
-
-                String key = filterArgObj.get(JsonFilteredPiece.KEY).getAsString();
-                String value = filterArgObj.get(JsonFilteredPiece.VALUE).getAsString();
-
-                curFilter.addKeyValue(key, value);
+            // Adds this filterArg to the orderedFilters list
+            int idx = filterObj.get(JsonFilteredPiece.FILTER_INDEX).getAsInt();
+            Filter curFilter = orderedFilters.get(idx);
+            if(curFilter == null){
+                // If this filter idx is not loaded on orderedFilters then I create it and put it there
+                curFilter = new Filter();
+                curFilter.filterId = filterObj.get(JsonFilteredPiece.ID).getAsInt();
+                curFilter.name = filterObj.getAsJsonObject(JsonFilteredPiece.FILTER).get(JsonFilteredPiece.FILTER_NAME).getAsString();
+                curFilter.addKeyValue("mlt_service", curFilter.name); // The first key-value is the filter identifier.
+                
+                orderedFilters.put(idx, curFilter);
             }
 
-            piece.addFilter(curFilter);
+            // Set's the curFilter key and value
+            JsonObject filterArgsModel = filterObj.getAsJsonObject(JsonFilteredPiece.FILTER_ARG);
+            String key = filterArgsModel.get(JsonFilteredPiece.KEY).getAsString();
+            String value = filterArgsModel.get(JsonFilteredPiece.VALUE).getAsString();
+            curFilter.addKeyValue(key, value);
+        }
+        
+        // Loads every Filter object into the piece
+        Iterator it = orderedFilters.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry<Integer, Filter> pair = (Map.Entry)it.next();
+            piece.addFilter(pair.getValue());
         }
         
         return piece;

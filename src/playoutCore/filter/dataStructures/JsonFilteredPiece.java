@@ -15,6 +15,8 @@ public class JsonFilteredPiece {
     public static final String ID = "id";
     public static final String FILTER_NAME = "name";
     public static final String MLT_PATH = "path";
-    public static final String FILTERS = "filterList";
-    public static final String FILTER_ARGS = "filterArgsList";
+    public static final String FILTER_CONFIGS = "filterConfigList";
+    public static final String FILTER = "filter";
+    public static final String FILTER_ARG = "filterArg";
+    public static final String FILTER_INDEX = "filterIndex";
 }
