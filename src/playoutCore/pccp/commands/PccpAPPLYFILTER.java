@@ -78,7 +78,7 @@ public class PccpAPPLYFILTER extends PccpCommand {
                     }
                 }
 
-                if(line.contains("<tractor id=")){
+                if(line.contains("<tractor ")){
                     insideTractorTag = true;
                 }
                 
