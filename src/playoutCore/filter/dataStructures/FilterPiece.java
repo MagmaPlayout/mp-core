@@ -12,6 +12,10 @@ public class FilterPiece {
     public String mltPath;
     private ArrayList<Filter> filters;
     
+    public FilterPiece(){
+        this.filters = new ArrayList<>();
+    }
+    
     public void addFilter(Filter filter){
         this.filters.add(filter);
     }

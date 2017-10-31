@@ -160,17 +160,17 @@ public class PccpAPPLYFILTER extends PccpCommand {
             if(curFilter == null){
                 // If this filter idx is not loaded on orderedFilters then I create it and put it there
                 curFilter = new Filter();
-                curFilter.filterId = filterObj.get(JsonFilteredPiece.ID).getAsInt();
-                curFilter.name = filterObj.getAsJsonObject(JsonFilteredPiece.FILTER).get(JsonFilteredPiece.FILTER_NAME).getAsString();
-                curFilter.addKeyValue("mlt_service", curFilter.name); // The first key-value is the filter identifier.
-                
+//                curFilter.filterId = filterObj.get(JsonFilteredPiece.ID).getAsInt();
+//                curFilter.name = filterObj.getAsJsonObject(JsonFilteredPiece.FILTER).get(JsonFilteredPiece.FILTER_NAME).getAsString();
+//                curFilter.addKeyValue("mlt_service", curFilter.name); // The first key-value is the filter identifier.
+//                
                 orderedFilters.put(idx, curFilter);
             }
 
             // Set's the curFilter key and value
             JsonObject filterArgsModel = filterObj.getAsJsonObject(JsonFilteredPiece.FILTER_ARG);
             String key = filterArgsModel.get(JsonFilteredPiece.KEY).getAsString();
-            String value = filterArgsModel.get(JsonFilteredPiece.VALUE).getAsString();
+            String value = filterObj.get(JsonFilteredPiece.VALUE).getAsString();
             curFilter.addKeyValue(key, value);
         }
         
