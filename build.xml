@@ -87,6 +87,7 @@
             <zipgroupfileset dir="dist" includes="*.jar"/>
             <zipgroupfileset dir="libs" includes="*.jar"/>
 			<zipgroupfileset dir="../mpc-meltedBackend/dist" includes="*.jar"/>
+			<zipgroupfileset dir="../mp-libconfig/dist" includes="*.jar"/>
 
             <manifest>
                 <attribute name="Main-Class" value="${main.class}"/>

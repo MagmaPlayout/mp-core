@@ -9,8 +9,7 @@ import meltedBackend.common.MeltedCommandException;
 import meltedBackend.responseParser.responses.GenericResponse;
 import meltedBackend.responseParser.responses.ListResponse;
 import org.quartz.Scheduler;
-import playoutCore.dataStore.DataStore;
-import playoutCore.dataStore.dataStructures.Clip;
+import playoutCore.dataStructures.Clip;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import redis.clients.jedis.Jedis;
@@ -35,7 +34,7 @@ public class PccpPLAYNOW extends PccpCommand {
     }
 
     @Override
-    public boolean execute(MvcpCmdFactory factory, DataStore store) {
+    public boolean execute(MvcpCmdFactory factory) {
         //TODO: validate args lenght, only accepts one clip, that is only one json object.
         if(args == null){
             logger.log(Level.SEVERE, "Playout Core - No arguments found for PLAYNOW PCCP command.");
@@ -49,7 +48,7 @@ public class PccpPLAYNOW extends PccpCommand {
         int lastClipId = 0;
         
         try {
-            lastClipId = ((ListResponse)factory.getList(unit).exec()).getPlaylistLength()-1;
+            lastClipId = ((ListResponse)factory.getList(unit).exec()).getLastPlClipIndex()-1;
         } catch (MeltedCommandException ex) {
             logger.log(Level.SEVERE, "Playout Core - An error occured while executing the LIST melted command. Cannot get playlist lenght!");
             return false;
@@ -88,7 +87,7 @@ public class PccpPLAYNOW extends PccpCommand {
     }
 
     @Override
-    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory, DataStore store) {
+    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory) {
         throw new UnsupportedOperationException("This command does not implement the executeForResponse method.");
     }
 }

@@ -8,11 +8,11 @@ import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 
 /**
- *  This command cleans Melted's playlists, removing all clips from it.
+ *  This command cleans Melted's playlists, removing all clips but the playing one.
  * 
  * @author rombus
  */
-public class PccpCLEARALL extends PccpCommand {
+public class PccpCLEAN extends PccpCommand {
     
     @Override
     public boolean execute(MvcpCmdFactory factory) {
@@ -20,13 +20,11 @@ public class PccpCLEARALL extends PccpCommand {
         String unit = "U0";
 
         try {
-            factory.getStop(unit).exec();
             factory.getClean(unit).exec();
-            factory.getRemove(unit).exec();
-            Logger.getLogger(PccpCLEARALL.class.getName()).log(Level.INFO, "Playout Core - Melted clips removed.");
+            Logger.getLogger(PccpCLEAN.class.getName()).log(Level.INFO, "PccpCLEAN - Melted CLEAN executed.");
         } catch (MeltedCommandException ex) {
             //TODO handle errors
-            Logger.getLogger(PccpCLEARALL.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(PccpCLEAN.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
         

@@ -6,8 +6,7 @@ import java.util.logging.Logger;
 import meltedBackend.common.MeltedCommandException;
 import meltedBackend.responseParser.responses.GenericResponse;
 import org.quartz.Scheduler;
-import playoutCore.dataStore.DataStore;
-import playoutCore.dataStore.dataStructures.Clip;
+import playoutCore.dataStructures.Clip;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
 import redis.clients.jedis.Jedis;
@@ -36,7 +35,7 @@ public class PccpMOVE extends PccpCommand {
     }
 
     @Override
-    public boolean execute(MvcpCmdFactory factory, DataStore store) {
+    public boolean execute(MvcpCmdFactory factory) {
         //TODO: validate args lenght, only accepts one clip, that is only one json object.
         if(args == null){
             logger.log(Level.SEVERE, "Playout Core - No arguments found for MOVE PCCP command.");
@@ -86,7 +85,7 @@ public class PccpMOVE extends PccpCommand {
     }
 
     @Override
-    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory, DataStore store) {
+    public JsonObject executeForResponse(MvcpCmdFactory meltedCmdFactory) {
         throw new UnsupportedOperationException("This command does not implement the executeForResponse method.");
     }
 }

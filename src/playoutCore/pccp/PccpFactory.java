@@ -4,15 +4,21 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.util.logging.Logger;
 import org.quartz.Scheduler;
+import playoutCore.calendar.dataStructures.Occurrence;
+import playoutCore.dataStructures.Clip;
 import playoutCore.pccp.commands.PccpAPND;
+import playoutCore.pccp.commands.PccpAPPLYFILTER;
+import playoutCore.pccp.commands.PccpCALCHANGE;
+import playoutCore.pccp.commands.PccpCLEAN;
 import playoutCore.pccp.commands.PccpCLEARALL;
 import playoutCore.pccp.commands.PccpGETPL;
 import playoutCore.pccp.commands.PccpGOTO;
 import playoutCore.pccp.commands.PccpMOVE;
+import playoutCore.pccp.commands.PccpPLAY;
 import playoutCore.pccp.commands.PccpPLAYNOW;
-import playoutCore.pccp.commands.PccpPLPLAYNOW;
-import playoutCore.pccp.commands.PccpPLSCHED;
 import playoutCore.pccp.commands.PccpREMOVE;
+import playoutCore.pccp.commands.PccpSWITCHMODE;
+import playoutCore.pccp.commands.PccpUSTA;
 import redis.clients.jedis.Jedis;
 
 /**
@@ -25,15 +31,18 @@ import redis.clients.jedis.Jedis;
 public class PccpFactory {
     private final Jedis publisher;
     private final String fscpChannel, pcrChannel;
-    private final Scheduler scheduler;
     private final Logger logger;
+    private Scheduler scheduler;
 
-    public PccpFactory(Jedis publisher, String fscpChannel, String pcrChannel, Scheduler scheduler, Logger logger){
+    public PccpFactory(Jedis publisher, String fscpChannel, String pcrChannel, Logger logger){
         this.publisher = publisher;
         this.fscpChannel = fscpChannel;
         this.pcrChannel = pcrChannel;
-        this.scheduler = scheduler;
         this.logger = logger;
+    }
+
+    public void setScheduler(Scheduler scheduler){
+        this.scheduler = scheduler;
     }
 
 
@@ -42,15 +51,18 @@ public class PccpFactory {
      */
     private enum Commands {
         PLAYNOW,    // Plays given clip as soon as it can. PLAYNOW <clip id>
-        PLPLAYNOW,  // Plays given playlist as soon as it can. PLAYNOW <playlist id>
+        PLAY,       // Makes melted start playing it's playlist
+        CLEAN,      // Removes everything from the playlist except for the playing clip. No arguments.
         CLEARALL,   // Removes everything from the playlist. No arguments.
-        PLSCHED,    // Schedules a given playlist. PLSCHED <playlist id> <timestamp>
         GETPL,      // Returns the playlist loaded in melted plus the clips that will be added to melted in schedule
-        GETTIMERS,  // Returns a JSON with the 3 timers (uptime, clip time, playlist remaining time)
         APND,       // Appends a clip to the playout's playlist
         REMOVE,     // Removes a given playlist index
         MOVE,       // Moves a media from 1 playlist index to another
         GOTO,       // Moves the playing cursor to the specified index
+        CALCHANGE,  // A change to the calendar schedule has been issued
+        USTA,       // Useful to get information about the playing clip
+        SWITCHMODE, // Changes from live mode to calendar mode and viceversa
+        APPLYFILTER,// Creates a piece (.mlt) with the specified filter
 
         STANDBY,    // Plays the stand by, "technical difficulties" media. . 1 argument: which standby to play
         PREM,       // Playlist Removed. 1 argument: playlist name/id
@@ -74,27 +86,24 @@ public class PccpFactory {
             //TODO object pool for PccpCommands
             if(oc != null){
                 PccpCommand cmd = null;
-                switch(oc){
-                    case PLSCHED:
-                        cmd = new PccpPLSCHED(args, scheduler, logger);
-                        break;
+                switch(oc){                    
                     case PLAYNOW:
                         cmd = new PccpPLAYNOW(args, publisher, fscpChannel, scheduler, logger);
                         break;
-                    case PLPLAYNOW:
-                        cmd = new PccpPLPLAYNOW(args, publisher, fscpChannel, scheduler, logger);
+                    case PLAY:
+                        cmd = new PccpPLAY(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case CLEAN:
+                        cmd = new PccpCLEAN();
                         break;
                     case CLEARALL:
                         cmd = new PccpCLEARALL();
                         break;
                     case GETPL:
-                        cmd = new PccpGETPL(publisher, pcrChannel);
+                        cmd = new PccpGETPL();
                         break;
                     case APND:
                         cmd = new PccpAPND(args, publisher, fscpChannel, scheduler, logger);
-                        break;
-                    case GETTIMERS:
-                        System.out.println("GETTIMERS NOT IMPLEMENTED YET!!!");
                         break;
                     case REMOVE:
                         cmd = new PccpREMOVE(args, publisher, fscpChannel, scheduler, logger);
@@ -104,6 +113,18 @@ public class PccpFactory {
                         break;
                     case GOTO:
                         cmd = new PccpGOTO(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case CALCHANGE:
+                        cmd = new PccpCALCHANGE(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case USTA:
+                        cmd = new PccpUSTA();
+                        break;
+                    case SWITCHMODE:
+                        cmd = new PccpSWITCHMODE(args, publisher, fscpChannel, scheduler, logger);
+                        break;
+                    case APPLYFILTER:
+                        cmd = new PccpAPPLYFILTER(args, publisher, fscpChannel, scheduler, logger);
                         break;
                 }
 
@@ -138,5 +159,40 @@ public class PccpFactory {
         //TODO: handle args being null on commands that NEED args.
         PccpCommand cmd = Commands.convertCmdStrToObj(opcode, args, publisher, fscpChannel, pcrChannel, scheduler, logger);
         return cmd;
+    }
+
+    /**
+     * Returns an APND PCCP Command from an Occurrence.
+     *
+     * @param oc  Occurrence loaded with the data to put in APND command
+     * @param pos curentPos
+     * @return
+     */
+    public PccpAPND getAPNDFromOccurrence(Occurrence oc, int pos){
+        return (PccpAPND) getCommand(
+                "APND { "
+                +" \"piece\":{ "
+                    +" \"path\":\""     + oc.path  +"\", "
+                    +" \"duration\":\"" + oc.len   +"\", "
+                    +" \"frameRate\":"  + oc.frameRate     +", "
+                    +" \"frameCount\":" + oc.frameCount    +" "
+                    +" }, "
+                    +" \"currentPos\":" + pos
+                +" }"
+            );
+    }
+
+    public PccpAPND getAPNDFromClip(Clip clip){
+        return (PccpAPND) getCommand(
+                "APND { "
+                +" \"piece\":{ "
+                    +" \"path\":"     + clip.path  +", "
+                    +" \"duration\":\"" + clip.len   +"\", "
+                    +" \"frameRate\":"  + clip.fps   +", "
+                    +" \"frameCount\":" + clip.frameLen +" "
+                    +" }, "
+                    +" \"currentPos\":0"
+                +" }"
+        );
     }
 }

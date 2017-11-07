@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<mlt LC_NUMERIC="es_AR.utf8" version="6.3.0" title="{pathname}">
+    <profile frame_rate_num="{fps}" frame_rate_den="1"/>
+    <producer id="producer0" in="0" out="{length-1}">
+        <property name="fps">{fps}</property>
+        <property name="frame_rate_num">{fps}</property>
+        <property name="frame_rate_den">1</property>
+        <property name="resource">{pathname}</property>
+        <property name="mlt_service">{mlt_service}</property>
+        <property name="length">{length}</property>
+    </producer>
+  
+    <playlist id="playlist0">
+        <entry producer="producer0" in="0" out="{frame_out}"/>
+    </playlist>
+</mlt>

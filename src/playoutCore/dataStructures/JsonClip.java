@@ -1,4 +1,4 @@
-package playoutCore.dataStore.dataStructures;
+package playoutCore.dataStructures;
 
 /**
  * Here are the keys from the JSON object received from the frontend
@@ -7,7 +7,7 @@ package playoutCore.dataStore.dataStructures;
  * @author rombus
  */
 public class JsonClip {
-    public static final String MEDIA_KEY = "media";
+    public static final String PIECE_KEY = "piece";
     public static final String PATH_KEY = "path";
     public static final String DURATION_KEY = "duration";
     public static final String FILTER_ID_KEY = "filterId";

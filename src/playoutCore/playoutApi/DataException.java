@@ -1,4 +1,4 @@
-package playoutCore.dataStore;
+package playoutCore.playoutApi;
 
 /**
  * This exception is thrown whenever an error occurs on the DataStore.
