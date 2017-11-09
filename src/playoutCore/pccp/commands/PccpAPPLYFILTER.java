@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import libconfig.ConfigurationManager;
 import org.quartz.Scheduler;
 import playoutCore.filter.dataStructures.Filter;
 import playoutCore.filter.dataStructures.FilterPiece;
@@ -160,10 +161,6 @@ public class PccpAPPLYFILTER extends PccpCommand {
             if(curFilter == null){
                 // If this filter idx is not loaded on orderedFilters then I create it and put it there
                 curFilter = new Filter();
-//                curFilter.filterId = filterObj.get(JsonFilteredPiece.ID).getAsInt();
-//                curFilter.name = filterObj.getAsJsonObject(JsonFilteredPiece.FILTER).get(JsonFilteredPiece.FILTER_NAME).getAsString();
-//                curFilter.addKeyValue("mlt_service", curFilter.name); // The first key-value is the filter identifier.
-//                
                 orderedFilters.put(idx, curFilter);
             }
 
@@ -172,6 +169,14 @@ public class PccpAPPLYFILTER extends PccpCommand {
             String key = filterArgsModel.get(JsonFilteredPiece.KEY).getAsString();
             String value = filterObj.get(JsonFilteredPiece.VALUE).getAsString();
             curFilter.addKeyValue(key, value);
+            
+            // TODO: provisorio.
+            // Esto es un hardcodeo para demostrar que el backend soporta filtros con argumentos
+            // pero como falta la GUI para definirlos, los hardcodeo acá.
+            ConfigurationManager config = ConfigurationManager.getInstance();
+            if(value.equals("watermark")){
+                curFilter.addKeyValue("resource","~/watermark.png");
+            }
         }
         
         // Loads every Filter object into the piece
