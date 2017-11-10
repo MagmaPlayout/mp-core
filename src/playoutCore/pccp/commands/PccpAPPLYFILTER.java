@@ -173,10 +173,29 @@ public class PccpAPPLYFILTER extends PccpCommand {
             // TODO: provisorio.
             // Esto es un hardcodeo para demostrar que el backend soporta filtros con argumentos
             // pero como falta la GUI para definirlos, los hardcodeo acá.
-            ConfigurationManager config = ConfigurationManager.getInstance();
             if(value.equals("watermark")){
-                curFilter.addKeyValue("resource","~/watermark.png");
+                curFilter.addKeyValue("resource","/opt/magma/watermark.png");
+                curFilter.addKeyValue("factory","loader");
+                curFilter.addKeyValue("composite.valign","bottom");
+                curFilter.addKeyValue("composite.halign","right");
             }
+            else if(value.equals("dynamictext")){
+                curFilter.addKeyValue("argument","#localtime %H:%M#");
+                curFilter.addKeyValue("geometry","0%/0%:100%x100%:100");
+                curFilter.addKeyValue("family","freemono");
+                curFilter.addKeyValue("size","22");
+                curFilter.addKeyValue("weight","400");
+                curFilter.addKeyValue("style" ,"normal");
+                curFilter.addKeyValue("fgcolour","#FFFFFF");
+                curFilter.addKeyValue("bgcolour","#00FFFFFF");
+                curFilter.addKeyValue("olcolour","0x00000000");
+                curFilter.addKeyValue("pad","0");
+                curFilter.addKeyValue("halign","left");
+                curFilter.addKeyValue("valign","bottom");
+                curFilter.addKeyValue("outline","0");
+                curFilter.addKeyValue("track","0");
+            }
+            
         }
         
         // Loads every Filter object into the piece
