@@ -8,6 +8,7 @@ import meltedBackend.telnetClient.MeltedTelnetClient;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
+import playoutCore.melted.status.StatusCmdProcessor;
 import playoutCore.modeSwitcher.ModeManager;
 import playoutCore.mvcp.MvcpCmdFactory;
 import playoutCore.pccp.PccpCommand;
@@ -26,6 +27,10 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
  * @author rombus
  */
 public class PlayoutCore {
+    private Logger logger;
+    private ConfigurationManager cfg;
+    private MeltedTelnetClient melted;
+    
     public static void main(String[] args) {
         PlayoutCore pc = new PlayoutCore();
         pc.run();
@@ -34,8 +39,8 @@ public class PlayoutCore {
     private void run(){
         // General config
         System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tT %4$s   %5$s%6$s%n"); // TODO: restore full log. For debugging I removed some stuff from it
-        Logger logger = Logger.getLogger(PlayoutCore.class.getName());
-        ConfigurationManager cfg = ConfigurationManager.getInstance();
+        logger = Logger.getLogger(PlayoutCore.class.getName());
+        cfg = ConfigurationManager.getInstance();
         cfg.init(logger);
 
         // Prints loaded configuration
@@ -66,7 +71,7 @@ public class PlayoutCore {
          * Creates a meltedTelnetClient instance, exits if it can't establish a connection.
          */
         logger.log(Level.INFO, "Playout Core - Attempt to connect to Melted server...");
-        MeltedTelnetClient melted = new MeltedTelnetClient();
+        melted = new MeltedTelnetClient();
         if(!connectToMelted(logger, cfg, melted)){ //handles retries by its own
             logger.log(Level.SEVERE, "Playout Core - ERROR: Could not connect to the Melted server. Retries exhausted. \n");
         }
@@ -110,9 +115,11 @@ public class PlayoutCore {
         /**
          * Start's the command listener thread.
          */
+        StatusCmdProcessor statusProcessor = new StatusCmdProcessor(this);
         logger.log(Level.INFO, "Playout Core - Attempt to start CommandsListener thread...");
         CommandsListener listener = new CommandsListener(redisPCCPSubscriber, redisPublisher,
-                cfg.getRedisPccpChannel(), cfg.getRedisFscpChannel(), cfg.getRedisPcrChannel(), scheduler, commandsQueue, pccpFactory, logger);
+                cfg.getRedisPccpChannel(), cfg.getRedisFscpChannel(), cfg.getRedisPcrChannel(), cfg.getRedisMstaChannel(),
+                scheduler, commandsQueue, pccpFactory, statusProcessor, logger);
 
         Thread listenerThread = new Thread(listener);
         try{
@@ -167,5 +174,11 @@ public class PlayoutCore {
         }
         
         return true;
+    }
+    
+    public void reconnectToMelted(){
+        System.out.println("LLAMANDO A RECONNECTAR");
+        melted.disconnect();
+        connectToMelted(logger, cfg, melted);
     }
 }
